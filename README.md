@@ -131,11 +131,55 @@ echo "first_10=${STRING:0:10}" >> $GITHUB_OUTPUT
 
 ## Running the Workflows
 
-### Manual Trigger
-1. Go to Actions tab in your repository
-2. Select the workflow you want to run
-3. Click "Run workflow"
-4. Provide input parameters if required
+### Manual Trigger with User Input
+1. Go to the **Actions** tab in your repository
+2. Select the workflow you want to run (e.g., "Simple User Message Input")
+3. Click **"Run workflow"** button
+4. Fill in the input fields that appear:
+   - **Message**: Enter your custom message text
+   - **Environment**: Select from dropdown (if available)
+   - **Enable notifications**: Check/uncheck boolean options
+   - **Version**: Enter optional version number
+5. Click **"Run workflow"** to start execution
+
+### Setting Up User Input in Workflows
+To allow users to set variables through the GitHub UI, use `workflow_dispatch` with `inputs`:
+
+```yaml
+on:
+  workflow_dispatch:
+    inputs:
+      message:
+        description: 'Enter your custom message'
+        required: true
+        default: 'Hello from GitHub Actions!'
+        type: string
+      environment:
+        description: 'Target environment'
+        type: choice
+        options:
+          - dev
+          - staging
+          - production
+      enable_feature:
+        description: 'Enable special feature'
+        type: boolean
+        default: false
+```
+
+### Input Types Available
+- **`string`**: Text input field
+- **`choice`**: Dropdown with predefined options
+- **`boolean`**: Checkbox (true/false)
+- **`environment`**: Environment selector
+
+### Accessing User Input in Jobs
+```yaml
+steps:
+  - run: echo "User message: ${{ github.event.inputs.message }}"
+  - run: echo "Selected environment: ${{ github.event.inputs.environment }}"
+  - run: echo "Feature enabled: ${{ github.event.inputs.enable_feature }}"
+```
 
 ### Automatic Triggers
 The workflows will also run on:
@@ -146,10 +190,13 @@ The workflows will also run on:
 
 1. **Use Descriptive Output Names**: Make output names clear and descriptive
 2. **Handle Default Values**: Always provide fallbacks for optional inputs
-3. **Validate Input**: Add basic validation for string inputs when needed
-4. **Escape Special Characters**: Be careful with strings containing special characters
-5. **Use Quotes**: When in doubt, quote your variables to handle spaces
-6. **Document Outputs**: Clearly document what each output contains
+3. **Add Helpful Descriptions**: Write clear descriptions for UI inputs
+4. **Set Appropriate Defaults**: Provide sensible default values for inputs
+5. **Use Required Wisely**: Only mark inputs as required when truly necessary
+6. **Validate Input**: Add basic validation for string inputs when needed
+7. **Escape Special Characters**: Be careful with strings containing special characters
+8. **Use Quotes**: When in doubt, quote your variables to handle spaces
+9. **Document Outputs**: Clearly document what each output contains
 
 ## Troubleshooting
 
@@ -162,9 +209,11 @@ The workflows will also run on:
 
 ### Debugging Tips
 
-- Add `echo` statements to verify output values
+- Add `echo` statements to verify output values and user inputs
 - Use the Actions logs to trace output generation
 - Test with simple static strings before using dynamic values
+- Check the "Re-run jobs" option to test different input values
+- Use `github.event.inputs.input_name || 'default'` pattern for safety
 
 ## Advanced Use Cases
 
