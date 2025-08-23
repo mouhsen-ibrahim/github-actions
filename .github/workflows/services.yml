@@ -25,7 +25,7 @@ jobs:
         id: set-services
         run: |
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            echo "services=${{ github.event.inputs.services }}" >> $GITHUB_OUTPUT
+            echo 'services=${{ github.event.inputs.services }}' >> $GITHUB_OUTPUT
           else
             echo "services=${DEFAULT_SERVICES}" >> $GITHUB_OUTPUT
           fi
