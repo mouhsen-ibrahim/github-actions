@@ -4,14 +4,14 @@ on:
   workflow_dispatch:
     inputs:
       input_string:
-        description: 'Input string to process'
+        description: "Input string to process"
         required: false
-        default: 'Hello, GitHub Actions!'
+        default: "Hello, GitHub Actions!"
         type: string
-  push:
-    branches: [ main, master ]
-  pull_request:
-    branches: [ main, master ]
+  #push:
+  #  branches: [ main, master ]
+  #pull_request:
+  #  branches: [ main, master ]
 
 jobs:
   output-string:

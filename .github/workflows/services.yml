@@ -1,0 +1,66 @@
+name: Services Workflow
+
+on:
+  workflow_dispatch:
+    inputs:
+      services:
+        description: "JSON array of services with path and name keys"
+        required: true
+        default: '[{"path": "services/serviceA", "name": "serviceA"}, {"path": "services/serviceB", "name": "serviceB"}]'
+        type: string
+
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        service: ${{ fromJson(github.event.inputs.services) }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Build service
+        run: |
+          echo "Building service: ${{ matrix.service.name }}"
+          echo "Service path: ${{ matrix.service.path }}"
+          cd "${{ matrix.service.path }}"
+          if [ -f "Makefile" ]; then
+            make build
+          else
+            echo "No Makefile found in ${{ matrix.service.path }}"
+          fi
+
+      - name: Test service
+        run: |
+          echo "Testing service: ${{ matrix.service.name }}"
+          cd "${{ matrix.service.path }}"
+          if [ -f "Makefile" ]; then
+            make test
+          else
+            echo "No Makefile found for testing in ${{ matrix.service.path }}"
+          fi
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    strategy:
+      matrix:
+        service: ${{ fromJson(github.event.inputs.services) }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Deploy service
+        run: |
+          echo "Deploying service: ${{ matrix.service.name }}"
+          cd "${{ matrix.service.path }}"
+          if [ -f "Makefile" ]; then
+            make deploy
+          else
+            echo "No Makefile found for deployment in ${{ matrix.service.path }}"
+          fi

@@ -4,17 +4,17 @@ on:
   workflow_dispatch:
     inputs:
       message:
-        description: 'Message to process'
+        description: "Message to process"
         required: false
-        default: 'Hello from caller workflow'
+        default: "Hello from caller workflow"
         type: string
       prefix:
-        description: 'Prefix for the message'
+        description: "Prefix for the message"
         required: false
-        default: 'CALLER'
+        default: "CALLER"
         type: string
-  push:
-    branches: [ main, master ]
+  #push:
+  #  branches: [ main, master ]
 
 jobs:
   call-reusable-workflow:

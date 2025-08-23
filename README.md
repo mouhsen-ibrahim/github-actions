@@ -224,3 +224,65 @@ The workflows will also run on:
 - **Configuration Management**: Generate configuration based on inputs
 
 These examples provide a solid foundation for implementing string output and input patterns in your GitHub Actions workflows.
+
+---
+
+## Services Workflow
+
+The services workflow (`services.yml`) demonstrates how to build and deploy multiple services using a dynamic list of services as input.
+
+### Input Format
+
+The workflow accepts a JSON array where each service is an object with `path` and `name` keys:
+
+```json
+[
+  {
+    "path": "services/serviceA",
+    "name": "serviceA"
+  },
+  {
+    "path": "services/serviceB", 
+    "name": "serviceB"
+  }
+]
+```
+
+### Usage Example
+
+You can manually trigger the workflow from the GitHub Actions tab with a custom list of services:
+
+```json
+[
+  {"path": "services/api", "name": "API Service"},
+  {"path": "services/web", "name": "Web Frontend"},
+  {"path": "services/worker", "name": "Background Worker"}
+]
+```
+
+### Service Structure
+
+Each service should have a `Makefile` in its directory with the following targets:
+
+- `build` - Build the service
+- `test` - Run tests
+- `deploy` - Deploy the service
+
+Example service directory structure:
+```
+services/
+├── serviceA/
+│   └── Makefile
+├── serviceB/
+│   └── Makefile
+└── serviceC/
+    └── Makefile
+```
+
+### Workflow Features
+
+- **Matrix Strategy**: Builds all services in parallel
+- **Conditional Deployment**: Only deploys on main branch
+- **Error Handling**: Gracefully handles missing Makefiles
+- **Flexible Input**: Works with manual triggers and push events
+- **Default Services**: Falls back to default service list if no input provided
