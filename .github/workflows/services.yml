@@ -11,17 +11,31 @@ on:
         required: true
         default: '[{"path": "services/serviceA", "name": "serviceA"}, {"path": "services/serviceB", "name": "serviceB"}]'
         type: string
-
   push:
     branches:
       - main
 
 jobs:
+  setup:
+    runs-on: ubuntu-latest
+    outputs:
+      services: ${{ steps.set-services.outputs.services }}
+    steps:
+      - name: Set services list
+        id: set-services
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "services=${{ github.event.inputs.services }}" >> $GITHUB_OUTPUT
+          else
+            echo "services=${{ env.DEFAULT_SERVICES }}" >> $GITHUB_OUTPUT
+          fi
+
   build:
+    needs: setup
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        service: ${{ fromJson(github.event.inputs.services || env.DEFAULT_SERVICES) }}
+        service: ${{ fromJson(needs.setup.outputs.services) }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -48,12 +62,12 @@ jobs:
           fi
 
   deploy:
-    needs: build
+    needs: [setup, build]
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main'
     strategy:
       matrix:
-        service: ${{ fromJson(github.event.inputs.services || env.DEFAULT_SERVICES) }}
+        service: ${{ fromJson(needs.setup.outputs.services) }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
