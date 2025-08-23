@@ -1,5 +1,8 @@
 name: Services Workflow
 
+env:
+  DEFAULT_SERVICES: '[{"path": "services/serviceA", "name": "serviceA"}, {"path": "services/serviceB", "name": "serviceB"}]'
+
 on:
   workflow_dispatch:
     inputs:
@@ -18,7 +21,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        service: ${{ fromJson(github.event.inputs.services) }}
+        service: ${{ fromJson(github.event.inputs.services || env.DEFAULT_SERVICES) }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -50,7 +53,7 @@ jobs:
     if: github.ref == 'refs/heads/main'
     strategy:
       matrix:
-        service: ${{ fromJson(github.event.inputs.services) }}
+        service: ${{ fromJson(github.event.inputs.services || env.DEFAULT_SERVICES) }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
