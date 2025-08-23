@@ -9,9 +9,12 @@ on:
       services:
         description: "JSON array of services with path and name keys"
         required: true
-        default: '[{"path": "services/serviceA", "name": "serviceA"}, {"path": "services/serviceB", "name": "serviceB"}]'
+        default: '[{"path": "services/serviceA", "name": "serviceA"}]'
         type: string
   push:
+    branches:
+      - main
+  pull_request:
     branches:
       - main
 
