@@ -1,0 +1,73 @@
+name: Call Reusable String Workflow
+
+on:
+  workflow_dispatch:
+    inputs:
+      message:
+        description: 'Message to process'
+        required: false
+        default: 'Hello from caller workflow'
+        type: string
+      prefix:
+        description: 'Prefix for the message'
+        required: false
+        default: 'CALLER'
+        type: string
+  push:
+    branches: [ main, master ]
+
+jobs:
+  call-reusable-workflow:
+    name: Call Reusable String Processor
+    uses: ./.github/workflows/reusable-string-workflow.yml
+    with:
+      input_text: ${{ github.event.inputs.message || 'Triggered by push event' }}
+      prefix: ${{ github.event.inputs.prefix || 'AUTO' }}
+      add_timestamp: true
+
+  use-reusable-output:
+    name: Use Reusable Workflow Output
+    runs-on: ubuntu-latest
+    needs: call-reusable-workflow
+
+    steps:
+      - name: Display reusable workflow outputs
+        run: |
+          echo "=== Outputs from Reusable Workflow ==="
+          echo "Processed String: ${{ needs.call-reusable-workflow.outputs.processed_string }}"
+          echo "Original Length: ${{ needs.call-reusable-workflow.outputs.original_length }}"
+          echo "Processing Time: ${{ needs.call-reusable-workflow.outputs.processing_time }}"
+
+      - name: Further process the output
+        run: |
+          RECEIVED="${{ needs.call-reusable-workflow.outputs.processed_string }}"
+          echo "Further processing: ${RECEIVED}"
+          echo "Uppercase version: ${RECEIVED^^}"
+          echo "Word count: $(echo "$RECEIVED" | wc -w)"
+
+  multiple-calls:
+    name: Multiple Reusable Workflow Calls
+    strategy:
+      matrix:
+        config:
+          - { text: "First message", prefix: "MSG1" }
+          - { text: "Second message", prefix: "MSG2" }
+          - { text: "Third message", prefix: "MSG3" }
+    uses: ./.github/workflows/reusable-string-workflow.yml
+    with:
+      input_text: ${{ matrix.config.text }}
+      prefix: ${{ matrix.config.prefix }}
+      add_timestamp: false
+
+  collect-multiple-outputs:
+    name: Collect Multiple Outputs
+    runs-on: ubuntu-latest
+    needs: multiple-calls
+
+    steps:
+      - name: Show all matrix outputs
+        run: |
+          echo "=== All Matrix Job Outputs ==="
+          echo "This step runs after all matrix jobs complete"
+          echo "In a real scenario, you would collect and process all outputs"
+          echo "Matrix jobs have completed successfully"

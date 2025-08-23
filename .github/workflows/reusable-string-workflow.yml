@@ -1,0 +1,69 @@
+name: Reusable String Workflow
+
+on:
+  workflow_call:
+    inputs:
+      input_text:
+        description: 'Text to process'
+        required: false
+        default: 'Default text'
+        type: string
+      prefix:
+        description: 'Prefix to add to the text'
+        required: false
+        default: 'Processed'
+        type: string
+      add_timestamp:
+        description: 'Add timestamp to output'
+        required: false
+        default: true
+        type: boolean
+    outputs:
+      processed_string:
+        description: 'The processed string output'
+        value: ${{ jobs.process-string.outputs.result }}
+      original_length:
+        description: 'Length of original input'
+        value: ${{ jobs.process-string.outputs.length }}
+      processing_time:
+        description: 'When the processing occurred'
+        value: ${{ jobs.process-string.outputs.timestamp }}
+
+jobs:
+  process-string:
+    name: Process String
+    runs-on: ubuntu-latest
+    outputs:
+      result: ${{ steps.process.outputs.processed }}
+      length: ${{ steps.process.outputs.original_length }}
+      timestamp: ${{ steps.process.outputs.time }}
+
+    steps:
+      - name: Process input string
+        id: process
+        run: |
+          INPUT="${{ inputs.input_text }}"
+          PREFIX="${{ inputs.prefix }}"
+          ADD_TIMESTAMP="${{ inputs.add_timestamp }}"
+
+          # Calculate original length
+          LENGTH=${#INPUT}
+          echo "original_length=${LENGTH}" >> $GITHUB_OUTPUT
+
+          # Build processed string
+          if [ "$ADD_TIMESTAMP" = "true" ]; then
+            TIMESTAMP=$(date '+%Y-%m-%d %H:%M:%S UTC')
+            PROCESSED="${PREFIX}: ${INPUT} (${TIMESTAMP})"
+            echo "time=${TIMESTAMP}" >> $GITHUB_OUTPUT
+          else
+            PROCESSED="${PREFIX}: ${INPUT}"
+            echo "time=N/A" >> $GITHUB_OUTPUT
+          fi
+
+          echo "processed=${PROCESSED}" >> $GITHUB_OUTPUT
+
+          # Display results
+          echo "=== String Processing Results ==="
+          echo "Original: ${INPUT}"
+          echo "Length: ${LENGTH}"
+          echo "Processed: ${PROCESSED}"

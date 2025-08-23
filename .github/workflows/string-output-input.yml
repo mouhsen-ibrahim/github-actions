@@ -1,0 +1,141 @@
+name: String Output and Input Example
+
+on:
+  workflow_dispatch:
+    inputs:
+      input_string:
+        description: 'Input string to process'
+        required: false
+        default: 'Hello, GitHub Actions!'
+        type: string
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  output-string:
+    name: Generate String Output
+    runs-on: ubuntu-latest
+    outputs:
+      generated_string: ${{ steps.generate.outputs.result }}
+      processed_string: ${{ steps.process.outputs.processed }}
+      timestamp: ${{ steps.timestamp.outputs.time }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Generate string output
+        id: generate
+        run: |
+          # Generate a dynamic string
+          RESULT="Generated at $(date '+%Y-%m-%d %H:%M:%S') - Workflow run #${{ github.run_number }}"
+          echo "result=${RESULT}" >> $GITHUB_OUTPUT
+          echo "Generated string: ${RESULT}"
+
+      - name: Process input string
+        id: process
+        run: |
+          INPUT_STR="${{ github.event.inputs.input_string || 'Default string from push/PR' }}"
+          PROCESSED="Processed: ${INPUT_STR} | Length: ${#INPUT_STR}"
+          echo "processed=${PROCESSED}" >> $GITHUB_OUTPUT
+          echo "Processed string: ${PROCESSED}"
+
+      - name: Generate timestamp
+        id: timestamp
+        run: |
+          TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+          echo "time=${TIMESTAMP}" >> $GITHUB_OUTPUT
+          echo "Timestamp: ${TIMESTAMP}"
+
+  use-string-input:
+    name: Use String as Input
+    runs-on: ubuntu-latest
+    needs: output-string
+
+    steps:
+      - name: Display received strings
+        run: |
+          echo "=== Received String Outputs ==="
+          echo "Generated String: ${{ needs.output-string.outputs.generated_string }}"
+          echo "Processed String: ${{ needs.output-string.outputs.processed_string }}"
+          echo "Timestamp: ${{ needs.output-string.outputs.timestamp }}"
+          echo ""
+          echo "=== String Manipulations ==="
+
+          # Use the strings in various ways
+          GENERATED="${{ needs.output-string.outputs.generated_string }}"
+          PROCESSED="${{ needs.output-string.outputs.processed_string }}"
+          TIMESTAMP="${{ needs.output-string.outputs.timestamp }}"
+
+          echo "Uppercase generated: ${GENERATED^^}"
+          echo "First 20 chars of processed: ${PROCESSED:0:20}..."
+          echo "Timestamp year: ${TIMESTAMP:0:4}"
+
+      - name: Create file with string content
+        run: |
+          cat > output.txt << EOF
+          GitHub Actions String Output Example
+          ====================================
+
+          Generated: ${{ needs.output-string.outputs.generated_string }}
+          Processed: ${{ needs.output-string.outputs.processed_string }}
+          Timestamp: ${{ needs.output-string.outputs.timestamp }}
+
+          Workflow Information:
+          - Run ID: ${{ github.run_id }}
+          - Run Number: ${{ github.run_number }}
+          - Actor: ${{ github.actor }}
+          - Repository: ${{ github.repository }}
+          EOF
+
+          echo "Created output.txt with content:"
+          cat output.txt
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: string-output-results
+          path: output.txt
+
+  conditional-job:
+    name: Conditional Job Based on String
+    runs-on: ubuntu-latest
+    needs: output-string
+    if: contains(needs.output-string.outputs.processed_string, 'GitHub')
+
+    steps:
+      - name: Run conditional logic
+        run: |
+          echo "This job runs because the processed string contains 'GitHub'"
+          echo "Processed string was: ${{ needs.output-string.outputs.processed_string }}"
+
+  matrix-job:
+    name: Matrix Job with String Variations
+    runs-on: ubuntu-latest
+    needs: output-string
+    strategy:
+      matrix:
+        operation: [uppercase, lowercase, reverse]
+
+    steps:
+      - name: Process string with matrix operation
+        run: |
+          ORIGINAL="${{ needs.output-string.outputs.generated_string }}"
+
+          case "${{ matrix.operation }}" in
+            uppercase)
+              RESULT="${ORIGINAL^^}"
+              ;;
+            lowercase)
+              RESULT="${ORIGINAL,,}"
+              ;;
+            reverse)
+              RESULT=$(echo "$ORIGINAL" | rev)
+              ;;
+          esac
+
+          echo "Operation: ${{ matrix.operation }}"
+          echo "Original: $ORIGINAL"
+          echo "Result: $RESULT"
