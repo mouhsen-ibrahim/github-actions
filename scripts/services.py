@@ -44,7 +44,7 @@ def compare_services(cmp : str):
     services = detect_services()
     changes = run_git("diff", "--name-only", cmp)
     changed_services = [service for service in services if changed_service(service["path"], changes.split("\n"))]
-    print(changed_services)
+    return changed_services
 
 def main():
     parser = argparse.ArgumentParser(description='Detect services in the repository')
@@ -55,7 +55,7 @@ def main():
     if args.all:
         print(detect_services())
     if args.cmp:
-        compare_services(args.cmp)
+        print(compare_services(args.cmp))
 
 if __name__ == '__main__':
     main()
