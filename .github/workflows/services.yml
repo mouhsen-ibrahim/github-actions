@@ -47,17 +47,13 @@ jobs:
             # Debug output
             echo "Generated services JSON: $services_json"
 
-            # Validate JSON is not empty array
-            if [ "$services_json" = "[]" ]; then
-              echo 'services=[{"path": "services/serviceA", "name": "serviceA"}, {"path": "services/serviceB", "name": "serviceB"}]' >> $GITHUB_OUTPUT
-            else
-              echo "services=${services_json}" >> $GITHUB_OUTPUT
-            fi
+            echo "services=${services_json}" >> $GITHUB_OUTPUT
           fi
 
   build:
     needs: setup
     runs-on: ubuntu-latest
+    condition: ${{ needs.setup.outputs.services != '[]' }}
     strategy:
       matrix:
         service: ${{ fromJson(needs.setup.outputs.services) }}
