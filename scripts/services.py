@@ -50,12 +50,15 @@ def main():
     parser = argparse.ArgumentParser(description='Detect services in the repository')
     parser.add_argument('--all', action='store_true', help='Find all services')
     parser.add_argument("--cmp", type=str, help="Compare with a git commit")
+    parser.add_argument("--last-green", action="store_true", help="Return changed services since the last green build")
     args = parser.parse_args()
 
     if args.all:
         print(detect_services())
     if args.cmp:
         print(compare_services(args.cmp))
+    if args.last_green:
+        print(compare_services("HEAD~1"))
 
 if __name__ == '__main__':
     main()
