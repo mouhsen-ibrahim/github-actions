@@ -27,23 +27,42 @@ jobs:
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
             echo 'services=${{ github.event.inputs.services }}' >> $GITHUB_OUTPUT
           else
-            services_json="["
-            first=true
-            for buildfile in $(find . -name "Buildfile.yaml" -type f); do
-              service_dir=$(dirname "$buildfile")
-              service_name=$(grep "^name:" "$buildfile" | sed 's/name: *//' | tr -d '"')
+            # Find all Buildfile.yaml files and build services JSON
+            buildfiles=$(find . -name "Buildfile.yaml" -type f)
 
-              if [ "$first" = true ]; then
-                first=false
+            if [ -z "$buildfiles" ]; then
+              # Fallback to default services if no Buildfile.yaml found
+              echo 'services=[{"path": "services/serviceA", "name": "serviceA"}, {"path": "services/serviceB", "name": "serviceB"}]' >> $GITHUB_OUTPUT
+            else
+              services_json="["
+              first=true
+              for buildfile in $buildfiles; do
+                service_dir=$(dirname "$buildfile")
+                service_name=$(grep "^name:" "$buildfile" | sed 's/name: *//' | tr -d '"')
+
+                # Skip if service_name is empty
+                if [ -n "$service_name" ]; then
+                  if [ "$first" = true ]; then
+                    first=false
+                  else
+                    services_json="${services_json},"
+                  fi
+
+                  services_json="${services_json}{\"path\":\"${service_dir#./}\",\"name\":\"${service_name}\"}"
+                fi
+              done
+              services_json="${services_json}]"
+
+              # Debug output
+              echo "Generated services JSON: $services_json"
+
+              # Validate JSON is not empty array
+              if [ "$services_json" = "[]" ]; then
+                echo 'services=[{"path": "services/serviceA", "name": "serviceA"}, {"path": "services/serviceB", "name": "serviceB"}]' >> $GITHUB_OUTPUT
               else
-                services_json="${services_json},"
+                echo "services=${services_json}" >> $GITHUB_OUTPUT
               fi
-
-              services_json="${services_json}{\"path\":\"${service_dir#./}\",\"name\":\"${service_name}\"}"
-            done
-            services_json="${services_json}]"
-
-            echo "services=${services_json}" >> $GITHUB_OUTPUT
+            fi
           fi
 
   build:
