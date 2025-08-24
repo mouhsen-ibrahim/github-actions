@@ -1,0 +1,11 @@
+name: serviceB
+description: Service B for demonstration
+version: 2.1.0
+build:
+  dockerfile: Dockerfile
+  context: .
+dependencies:
+  - serviceC
+environment:
+  - NODE_ENV=staging
+  - PORT=3000

@@ -1,8 +1,5 @@
 name: Services Workflow
 
-env:
-  DEFAULT_SERVICES: '[{"path": "services/serviceA", "name": "serviceA"}, {"path": "services/serviceB", "name": "serviceB"}]'
-
 on:
   workflow_dispatch:
     inputs:
@@ -30,7 +27,23 @@ jobs:
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
             echo 'services=${{ github.event.inputs.services }}' >> $GITHUB_OUTPUT
           else
-            echo "services=${DEFAULT_SERVICES}" >> $GITHUB_OUTPUT
+            services_json="["
+            first=true
+            for buildfile in $(find . -name "Buildfile.yaml" -type f); do
+              service_dir=$(dirname "$buildfile")
+              service_name=$(grep "^name:" "$buildfile" | sed 's/name: *//' | tr -d '"')
+
+              if [ "$first" = true ]; then
+                first=false
+              else
+                services_json="${services_json},"
+              fi
+
+              services_json="${services_json}{\"path\":\"${service_dir#./}\",\"name\":\"${service_name}\"}"
+            done
+            services_json="${services_json}]"
+
+            echo "services=${services_json}" >> $GITHUB_OUTPUT
           fi
 
   build:

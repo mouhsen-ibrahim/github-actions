@@ -1,0 +1,12 @@
+name: serviceD
+description: Service D for demonstration
+version: 3.0.1
+build:
+  dockerfile: Dockerfile
+  context: .
+dependencies: []
+environment:
+  - NODE_ENV=production
+  - PORT=5000
+  - LOG_LEVEL=info
+  - CACHE_TTL=3600

@@ -1,0 +1,12 @@
+name: serviceC
+description: Service C for demonstration
+version: 1.5.2
+build:
+  dockerfile: Dockerfile
+  context: .
+dependencies:
+  - serviceD
+environment:
+  - NODE_ENV=development
+  - PORT=4000
+  - DEBUG=true
