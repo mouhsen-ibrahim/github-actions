@@ -21,6 +21,8 @@ jobs:
     outputs:
       services: ${{ steps.set-services.outputs.services }}
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
       - name: Set services list
         id: set-services
         run: |
