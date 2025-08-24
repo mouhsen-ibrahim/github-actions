@@ -28,8 +28,7 @@ jobs:
       - name: Debug
         run: |
           git status
-          git checkout main
-          git pull origin main
+          git branch
       - name: Set services list
         id: set-services
         run: |
