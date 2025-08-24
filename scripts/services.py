@@ -11,7 +11,7 @@ def detect_services():
                     data = yaml.safe_load(f)
                     service = {
                         "name": data.get("name", ""),
-                        "path": os.path.join(root, file)
+                        "path": root
                     }
                     services.append(service)
     return services
