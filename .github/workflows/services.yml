@@ -1,8 +1,5 @@
 name: Services Workflow
 
-env:
-  DEFAULT_SERVICES: '[{"path": "services/serviceA", "name": "serviceA"}, {"path": "services/serviceB", "name": "serviceB"}]'
-
 on:
   workflow_dispatch:
     inputs:
@@ -24,13 +21,38 @@ jobs:
     outputs:
       services: ${{ steps.set-services.outputs.services }}
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - name: Determine base branch
+        # For PRs use the PR base; otherwise fall back to main (change if your default differs)
+        run: |
+          BASE_REF="${{ github.base_ref }}"
+          if [ -z "$BASE_REF" ]; then BASE_REF="main"; fi
+          echo "BASE_REF=$BASE_REF" >> "$GITHUB_ENV"
+
+      - name: Fetch base ref
+        run: |
+          git fetch --no-tags --prune --depth=1 origin \
+            +refs/heads/${BASE_REF}:refs/remotes/origin/${BASE_REF}
+          git rev-parse --verify origin/${BASE_REF}
       - name: Set services list
         id: set-services
         run: |
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
             echo 'services=${{ github.event.inputs.services }}' >> $GITHUB_OUTPUT
           else
-            echo "services=${DEFAULT_SERVICES}" >> $GITHUB_OUTPUT
+            services_json=$(python scripts/services.py --cmp origin/${BASE_REF}...HEAD)
+            # Debug output
+            echo "Generated services JSON: $services_json"
+
+            # Validate JSON is not empty array
+            if [ "$services_json" = "[]" ]; then
+              echo 'services=[{"path": "services/serviceA", "name": "serviceA"}, {"path": "services/serviceB", "name": "serviceB"}]' >> $GITHUB_OUTPUT
+            else
+              echo "services=${services_json}" >> $GITHUB_OUTPUT
+            fi
           fi
 
   build:
