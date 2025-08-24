@@ -29,7 +29,7 @@ jobs:
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
             echo 'services=${{ github.event.inputs.services }}' >> $GITHUB_OUTPUT
           else
-            services_json=$(python scripts/services.py)
+            services_json=$(python scripts/services.py --all)
             # Debug output
             echo "Generated services JSON: $services_json"
 

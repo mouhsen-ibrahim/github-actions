@@ -1,5 +1,6 @@
 # This script is used to detect all services in the repository
 
+import argparse
 import os, yaml
 
 def detect_services():
@@ -17,8 +18,12 @@ def detect_services():
     return services
 
 def main():
-    services = detect_services()
-    print(services)
+    parser = argparse.ArgumentParser(description='Detect services in the repository')
+    parser.add_argument('--all', action='store_true', help='Find all services')
+    args = parser.parse_args()
+
+    if args.all:
+        print(detect_services())
 
 if __name__ == '__main__':
     main()
