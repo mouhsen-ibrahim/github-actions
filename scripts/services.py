@@ -117,6 +117,10 @@ def main():
         token = os.environ.get("GITHUB_TOKEN")
         if token is None:
             raise ValueError("GITHUB_TOKEN environment variable is not set")
+        print(f"Using owner: {args.owner}")
+        print(f"Using repo: {args.repo}")
+        print(f"Using branch: {args.branch}")
+        print(f"Using workflow: {args.workflow}")
         last_green_commit = get_last_green_commit(args.owner, args.repo, args.branch, token, args.workflow)
         print(last_green_commit)
         print(compare_services(last_green_commit))
