@@ -37,7 +37,12 @@ jobs:
             echo 'services=${{ github.event.inputs.services }}' >> $GITHUB_OUTPUT
           else
             # TODO: Make this work on main too
-            services_json=$(python scripts/services.py --last-green --owner ${{ github.repository_owner }} --repo ${{ github.event.repository.name }} --branch ${{ github.head_ref }})
+            if [-z "${{ github.head_ref }}" ];
+            then
+              services_json=$(python scripts/services.py --last-green --owner ${{ github.repository_owner }} --repo ${{ github.event.repository.name }} --branch ${{ github.ref_name }})
+            else
+              services_json=$(python scripts/services.py --last-green --owner ${{ github.repository_owner }} --repo ${{ github.event.repository.name }} --branch ${{ github.head_ref }})
+            fi
             # Debug output
             echo "Generated services JSON: $services_json"
 
