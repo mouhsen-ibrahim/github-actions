@@ -2,7 +2,7 @@ build:
 	@echo "Building serviceA, hi"
 
 run:
-	@echo "Running serviceA"
+	@echo "Running serviceA, hi"
 
 test:
 	@echo "Testing serviceA"
