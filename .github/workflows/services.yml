@@ -44,7 +44,7 @@ jobs:
               last_successful_commit=$(python scripts/services.py --last-green --owner ${{ github.repository_owner }} --repo ${{ github.event.repository.name }} --branch ${{ github.head_ref }})
             fi
             echo "Last successful commit: ${last_successful_commit}"
-            services_json=$(python scripts/services.py --diff ${last_successful_commit}..HEAD)
+            services_json=$(python scripts/services.py --cmp ${last_successful_commit})
             # Debug output
             echo "Generated services JSON: $services_json"
 
