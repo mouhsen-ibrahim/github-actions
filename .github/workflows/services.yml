@@ -53,6 +53,8 @@ jobs:
 
   build:
     needs: setup
+    container:
+      image: ${{ matrix.service.image || 'ubuntu:latest' }}
     runs-on: ubuntu-latest
     if: ${{ needs.setup.outputs.services != '[]' }}
     strategy:
