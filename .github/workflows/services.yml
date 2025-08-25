@@ -15,6 +15,9 @@ on:
     branches:
       - main
 
+permissions:
+  contents: read
+
 jobs:
   setup:
     runs-on: ubuntu-latest
@@ -25,39 +28,26 @@ jobs:
         uses: actions/checkout@v5
         with:
           fetch-depth: 0
-      - name: Determine base branch
-        # For PRs use the PR base; otherwise fall back to main (change if your default differs)
-        run: |
-          BASE_REF="${{ github.base_ref }}"
-          if [ -z "$BASE_REF" ]; then BASE_REF="main"; fi
-          echo "BASE_REF=$BASE_REF" >> "$GITHUB_ENV"
-
-      - name: Fetch base ref
-        run: |
-          git fetch --no-tags --prune --depth=1 origin \
-            +refs/heads/${BASE_REF}:refs/remotes/origin/${BASE_REF}
-          git rev-parse --verify origin/${BASE_REF}
       - name: Set services list
         id: set-services
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
             echo 'services=${{ github.event.inputs.services }}' >> $GITHUB_OUTPUT
           else
-            services_json=$(python scripts/services.py --cmp origin/${BASE_REF}...HEAD)
+            # TODO: Make this work on main too
+            services_json=$(python scripts/services.py --last-green --owner ${{ github.repository_owner }} --repo ${{ github.event.repository.name }} --branch ${{ github.head_ref }})
             # Debug output
             echo "Generated services JSON: $services_json"
 
-            # Validate JSON is not empty array
-            if [ "$services_json" = "[]" ]; then
-              echo 'services=[{"path": "services/serviceA", "name": "serviceA"}, {"path": "services/serviceB", "name": "serviceB"}]' >> $GITHUB_OUTPUT
-            else
-              echo "services=${services_json}" >> $GITHUB_OUTPUT
-            fi
+            echo "services=${services_json}" >> $GITHUB_OUTPUT
           fi
 
   build:
     needs: setup
     runs-on: ubuntu-latest
+    if: ${{ needs.setup.outputs.services != '[]' }}
     strategy:
       matrix:
         service: ${{ fromJson(needs.setup.outputs.services) }}
