@@ -28,18 +28,18 @@ jobs:
         uses: actions/checkout@v5
         with:
           fetch-depth: 0
-      - name: Determine base branch
-        # For PRs use the PR base; otherwise fall back to main (change if your default differs)
-        run: |
-          BASE_REF="${{ github.base_ref }}"
-          if [ -z "$BASE_REF" ]; then BASE_REF="main"; fi
-          echo "BASE_REF=$BASE_REF" >> "$GITHUB_ENV"
+      #- name: Determine base branch
+      # For PRs use the PR base; otherwise fall back to main (change if your default differs)
+      #  run: |
+      #    BASE_REF="${{ github.base_ref }}"
+      #    if [ -z "$BASE_REF" ]; then BASE_REF="main"; fi
+      #    echo "BASE_REF=$BASE_REF" >> "$GITHUB_ENV"
 
-      - name: Fetch base ref
-        run: |
-          git fetch --no-tags --prune --depth=1 origin \
-            +refs/heads/${BASE_REF}:refs/remotes/origin/${BASE_REF}
-          git rev-parse --verify origin/${BASE_REF}
+      #- name: Fetch base ref
+      #  run: |
+      #    git fetch --no-tags --prune --depth=1 origin \
+      #      +refs/heads/${BASE_REF}:refs/remotes/origin/${BASE_REF}
+      #    git rev-parse --verify origin/${BASE_REF}
       - name: Set services list
         id: set-services
         env:
