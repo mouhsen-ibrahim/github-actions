@@ -1,5 +1,5 @@
 build:
-	@echo "Building serviceA"
+	@echo "Building serviceA "
 
 run:
 	@echo "Running serviceA"
