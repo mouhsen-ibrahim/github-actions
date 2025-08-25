@@ -118,7 +118,6 @@ def main():
         if token is None:
             raise ValueError("GITHUB_TOKEN environment variable is not set")
         last_green_commit = get_last_green_commit(args.owner, args.repo, args.branch, token, args.workflow)
-        print(last_green_commit)
         print(compare_services(last_green_commit))
 
 if __name__ == '__main__':
