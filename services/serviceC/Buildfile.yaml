@@ -1,6 +1,7 @@
 name: serviceC
 description: Service C for demonstration
 version: 1.5.2
+kind: terraform
 build:
   dockerfile: Dockerfile
   context: .

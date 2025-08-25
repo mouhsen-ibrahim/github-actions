@@ -1,6 +1,7 @@
 name: serviceA
 description: Service A for demonstration
 version: 1.0.0
+kind: go
 build:
   dockerfile: Dockerfile
   context: .
