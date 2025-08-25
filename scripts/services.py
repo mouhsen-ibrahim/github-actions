@@ -91,8 +91,7 @@ def get_last_green_commit(owner: str, repo: str, branch: str, token: str,
     runs = list_runs(owner, repo, branch, token, workflow_id=workflow_id, workflow_ref=workflow)
     run = pick_first_success_run(runs)
     if not run:
-        wf_label = f" (workflow={workflow_id or workflow})" if (workflow_id or workflow) else ""
-        raise RuntimeError(f"No successful workflow run found on branch '{branch}'{wf_label}.")
+        return current_commit()
     return run.get("head_sha")
 
 
