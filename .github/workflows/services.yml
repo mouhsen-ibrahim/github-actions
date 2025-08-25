@@ -39,10 +39,12 @@ jobs:
             # TODO: Make this work on main too
             if [ -z "${{ github.head_ref }}" ];
             then
-              services_json=$(python scripts/services.py --last-green --owner ${{ github.repository_owner }} --repo ${{ github.event.repository.name }} --branch ${{ github.ref_name }})
+              last_successful_commit=$(python scripts/services.py --last-green --owner ${{ github.repository_owner }} --repo ${{ github.event.repository.name }} --branch ${{ github.ref_name }})
             else
-              services_json=$(python scripts/services.py --last-green --owner ${{ github.repository_owner }} --repo ${{ github.event.repository.name }} --branch ${{ github.head_ref }})
+              last_successful_commit=$(python scripts/services.py --last-green --owner ${{ github.repository_owner }} --repo ${{ github.event.repository.name }} --branch ${{ github.head_ref }})
             fi
+            echo "Last successful commit: ${last_successful_commit}"
+            services_json=$(python scripts/services.py --diff ${last_successful_commit})
             # Debug output
             echo "Generated services JSON: $services_json"
 
