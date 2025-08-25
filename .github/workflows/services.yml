@@ -15,6 +15,9 @@ on:
     branches:
       - main
 
+permissions:
+  contents: read
+
 jobs:
   setup:
     runs-on: ubuntu-latest
@@ -39,6 +42,8 @@ jobs:
           git rev-parse --verify origin/${BASE_REF}
       - name: Set services list
         id: set-services
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
             echo 'services=${{ github.event.inputs.services }}' >> $GITHUB_OUTPUT
