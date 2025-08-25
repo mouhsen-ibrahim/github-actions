@@ -1,8 +1,8 @@
 build:
-	@echo "Building serviceA, hi"
+	@echo "Building serviceA"
 
 run:
-	@echo "Running serviceA, hi"
+	@echo "Running serviceA"
 
 test:
 	@echo "Testing serviceA"
