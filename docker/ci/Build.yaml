@@ -1,0 +1,4 @@
+name: ci
+dokcer:
+  image:
+    name: ci
