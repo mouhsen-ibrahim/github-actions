@@ -1,1 +1,1 @@
-REPO_URL=https://ghcr.io/mouhsen-ibrahim/github-actions
+DOCKER_REGISTRY=ghcr.io/mouhsen-ibrahim/github-actions
