@@ -2,3 +2,4 @@ name: ci
 dokcer:
   image:
     name: ci
+test: 1
