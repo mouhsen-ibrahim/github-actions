@@ -2,6 +2,7 @@ name: serviceA
 description: Service A for demonstration
 version: 1.0.0
 kind: go
+image: ghcr.io/mouhsen-ibrahim/github-actions/ci:latest
 build:
   dockerfile: Dockerfile
   context: .
