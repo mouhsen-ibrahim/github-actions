@@ -1,7 +1,7 @@
 name: serviceD
 description: Service D for demonstration
 version: 3.0.1
-kind: docker
+kind: python
 build:
   dockerfile: Dockerfile
   context: .
