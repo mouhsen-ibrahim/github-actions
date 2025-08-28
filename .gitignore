@@ -1,1 +1,4 @@
 terraform-plan
+.terraform
+*.tfstate.*
+*.tfstate
