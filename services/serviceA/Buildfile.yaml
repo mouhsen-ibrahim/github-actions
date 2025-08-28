@@ -7,5 +7,3 @@ build:
   context: .
 dependencies:
   - serviceB
-environment:
-  - NODE_ENV=production
