@@ -25,9 +25,10 @@ def detect_services():
                 with open(os.path.join(root, file), 'r') as f:
                     data = yaml.safe_load(f)
                     service = {
-                        "name": data.get("name", ""),
                         "path": root
                     }
+                    service = service | data
+                    service["name"] = service.get("name", "")
                     services.append(service)
     return services
 
@@ -91,8 +92,7 @@ def get_last_green_commit(owner: str, repo: str, branch: str, token: str,
     runs = list_runs(owner, repo, branch, token, workflow_id=workflow_id, workflow_ref=workflow)
     run = pick_first_success_run(runs)
     if not run:
-        wf_label = f" (workflow={workflow_id or workflow})" if (workflow_id or workflow) else ""
-        raise RuntimeError(f"No successful workflow run found on branch '{branch}'{wf_label}.")
+        return current_commit()
     return run.get("head_sha")
 
 
@@ -118,7 +118,7 @@ def main():
         if token is None:
             raise ValueError("GITHUB_TOKEN environment variable is not set")
         last_green_commit = get_last_green_commit(args.owner, args.repo, args.branch, token, args.workflow)
-        print(compare_services(last_green_commit))
+        print(last_green_commit)
 
 if __name__ == '__main__':
     main()

@@ -1,0 +1,2 @@
+DOCKER_REGISTRY=ghcr.io/mouhsen-ibrahim/github-actions
+ROOT=$(shell git rev-parse --show-toplevel)

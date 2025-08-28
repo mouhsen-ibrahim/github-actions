@@ -1,0 +1,5 @@
+terraform-plan
+.terraform
+*.tfstate.*
+*.tfstate
+node_modules
