@@ -96,6 +96,7 @@ jobs:
         with:
           name: ${{ matrix.service.artifact }}
           path: "${{ matrix.service.artifact_path }}"
+          include-hidden-files: true
 
       - name: Test service
         run: |
