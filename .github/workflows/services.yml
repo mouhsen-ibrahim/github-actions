@@ -90,6 +90,12 @@ jobs:
           else
             echo "No Makefile found in ${{ matrix.service.path }}"
           fi
+      - name: Save service artifacts
+        if: ${{ matrix.service.artifact != '' }}
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ matrix.service.artifact }}
+          path: "${{ matrix.service.artifact_path }}"
 
       - name: Test service
         run: |
