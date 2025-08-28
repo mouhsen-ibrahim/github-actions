@@ -3,7 +3,7 @@ description: Service C for demonstration
 version: 1.5.2
 kind: terraform
 artifact: terraform_plan
-artifact_path: services/serviceC/terraform-plan/plan.out
+artifact_path: services/serviceC/terraform-plan
 build:
   dockerfile: Dockerfile
   context: .
