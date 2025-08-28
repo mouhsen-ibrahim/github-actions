@@ -92,7 +92,7 @@ jobs:
           fi
       - name: Save service artifacts
         if: ${{ matrix.service.artifact != '' }}
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.service.artifact }}
           path: "${{ matrix.service.artifact_path }}"
