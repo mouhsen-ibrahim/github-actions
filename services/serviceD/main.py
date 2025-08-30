@@ -11,7 +11,7 @@ def index():
     return jsonify({
         "app": "simple-test-app",
         "version": "1.0",
-        "endpoints": ["/health", "/echo (GET/POST)", "/item (GET/POST/DELETE)"]
+        "endpoints": ["/health", "/echo (GET/POST)", "/items (GET/POST/DELETE)"]
     })
 
 @app.get("/health")
