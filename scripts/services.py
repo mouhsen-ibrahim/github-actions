@@ -43,12 +43,24 @@ def changed_service(path : str, changes : List[str]) -> bool:
             return True
     return False
 
+def get_services_by_type(services : List[dict], type : str) -> List[dict]:
+    return [service for service in services if service.get("type") == type]
+
 def get_changed_services(changes : List[str]) -> List[dict]:
     services = detect_services()
     if "Makefile.variables" or ".github/workflows/services.yml" in changes:
         return services
+    additional_services = []
+    if "go.Dockerfile" in changes:
+        additional_services.extend(get_services_by_type(services, "go"))
+    if "python.Dockerfile" in changes:
+        additional_services.extend(get_services_by_type(services, "python"))
+    if "node.Dockerfile" in changes:
+        additional_services.extend(get_services_by_type(services, "node"))
+    if "terraform.Dockerfile" in changes:
+        additional_services.extend(get_services_by_type(services, "terraform"))
     changed_services = [service for service in services if changed_service(service["path"], changes)]
-    return changed_services
+    return list(set(changed_services + additional_services))
 
 def compare_services(cmp : str):
     changes = run_git("diff", "--name-only", cmp)
