@@ -58,7 +58,7 @@ def get_services_by_kind(services : List[Service], type : str) -> List[Service]:
     return [service for service in services if service.data.get("kind") == type]
 
 def get_triggers(config):
-    return config.get.get("files", [])
+    return config.get("files", [])
 
 def get_services_by_selector(selector, services) -> List[Service]:
     if selector.get("all"):
@@ -73,7 +73,7 @@ def get_services_by_selector(selector, services) -> List[Service]:
 def get_changed_services(changes : List[str], config) -> List[Service]:
     services = detect_services()
     additional_services = []
-    for c in config:
+    for c in config.get("additional_services", []):
         changed_files = get_triggers(c.get("triggers", {}))
         if any(c in changes for c in changed_files):
             additional_services.extend(get_services_by_selector(c.get("selector", {}), services))
