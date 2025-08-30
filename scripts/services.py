@@ -43,11 +43,16 @@ def changed_service(path : str, changes : List[str]) -> bool:
             return True
     return False
 
-def compare_services(cmp : str):
+def get_changed_services(changes : List[str]) -> List[dict]:
     services = detect_services()
-    changes = run_git("diff", "--name-only", cmp)
-    changed_services = [service for service in services if changed_service(service["path"], changes.split("\n"))]
+    if "Makefile.variables" in changes:
+        return services
+    changed_services = [service for service in services if changed_service(service["path"], changes)]
     return changed_services
+
+def compare_services(cmp : str):
+    changes = run_git("diff", "--name-only", cmp)
+    return get_changed_services(changes.split("\n"))
 
 def current_commit() -> str:
     return run_git("rev-parse", "HEAD")
