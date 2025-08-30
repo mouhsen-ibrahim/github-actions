@@ -78,6 +78,16 @@ def get_changed_services(changes : List[str], config) -> List[Service]:
         if any(c in changes for c in changed_files):
             additional_services.extend(get_services_by_selector(c.get("selector", {}), services))
     changed_services = [service for service in services if changed_service(service.path, changes)]
+    for service in changed_services:
+        if service.data.get("dependencies", []) != []:
+            for dependency in service.data["dependencies"]:
+                if dependency not in [s.name for s in changed_services]:
+                    service_selector = {
+                        "attributes": {
+                            "name": dependency
+                        }
+                    }
+                    changed_services.extend(get_services_by_selector(service_selector, services))
 
     # Use dict.fromkeys() to preserve order while removing duplicates
     all_services = changed_services + additional_services
