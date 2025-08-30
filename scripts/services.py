@@ -64,7 +64,7 @@ def get_services_by_selector(selector, services) -> List[Service]:
     if selector.get("all"):
         return services
     ret = []
-    for attribute_name, attribute_value in selector.get("attributes", {}).item():
+    for attribute_name, attribute_value in selector.get("attributes", {}).items():
         for service in services:
             if service.data.get(attribute_name) == attribute_value:
                 ret.append(service)
@@ -74,7 +74,7 @@ def get_changed_services(changes : List[str], config) -> List[Service]:
     services = detect_services()
     additional_services = []
     for c in config.get("additional_services", []):
-        changed_files = get_triggers(c.get("triggers", {}))
+        changed_files = get_triggers(c.get("trigger", {}))
         if any(c in changes for c in changed_files):
             additional_services.extend(get_services_by_selector(c.get("selector", {}), services))
     #if "Makefile.variables" in changes or ".github/workflows/services.yml" in changes or "scripts/services.py" in changes:
