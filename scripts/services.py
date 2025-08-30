@@ -3,8 +3,8 @@
 import argparse
 import os, yaml
 from typing_extensions import List
-import subprocess, requests, re
-from typing import Optional, Tuple
+import subprocess, requests
+from typing import Optional
 
 class Service:
     def __init__(self, path: str):
