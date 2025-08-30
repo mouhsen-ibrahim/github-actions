@@ -45,7 +45,7 @@ def changed_service(path : str, changes : List[str]) -> bool:
 
 def get_changed_services(changes : List[str]) -> List[dict]:
     services = detect_services()
-    if "Makefile.variables" in changes:
+    if "Makefile.variables" or ".github/workflows/services.yml" in changes:
         return services
     changed_services = [service for service in services if changed_service(service["path"], changes)]
     return changed_services
