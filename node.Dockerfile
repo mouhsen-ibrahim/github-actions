@@ -46,7 +46,7 @@ COPY ${service}/package*.json ./
 # If no package-lock.json, use: RUN npm install --omit=dev --no-audit --no-fund
 RUN npm i --omit=dev --no-audit --no-fund && npm cache clean --force
 
-# Bring in compiled JavaScrip
+# Bring in compiled JS
 COPY --from=build /src/${service}/dist ./dist
 
 # Non-root for safety
