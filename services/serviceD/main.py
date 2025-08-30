@@ -52,7 +52,7 @@ def delete_item(item_id: int):
     global ITEMS
     before = len(ITEMS)
     ITEMS = [i for i in ITEMS if i["id"] != item_id]
-    return jsonify({"delete": len(ITEMS) != before})
+    return jsonify({"deleted": len(ITEMS) != before})
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=int(os.getenv("PORT", "8000")))
