@@ -51,7 +51,7 @@ jobs:
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
             echo 'services=${{ github.event.inputs.services }}' >> $GITHUB_OUTPUT
           else
-            export OTEL_RESOURCE_ATTRIBUTES="service.name=github-actions-services,service.namespace=github-actions,deployment.environment=dev"
+            export OTEL_RESOURCE_ATTRIBUTES="git.commit=${{ github.sha }},service.name=github-actions-services,service.namespace=github-actions,deployment.environment=dev"
             export OTEL_EXPORTER_OTLP_ENDPOINT="https://otlp-gateway-prod-eu-west-2.grafana.net/otlp"
             export OTEL_EXPORTER_OTLP_HEADERS="${{ secrets.OTEL_EXPORTER_OTLP_HEADERS }}"
             export OTEL_EXPORTER_OTLP_PROTOCOL="http/protobuf"
