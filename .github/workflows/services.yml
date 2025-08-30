@@ -55,7 +55,9 @@ jobs:
             export OTEL_EXPORTER_OTLP_ENDPOINT="https://otlp-gateway-prod-eu-west-2.grafana.net/otlp"
             export OTEL_EXPORTER_OTLP_HEADERS="${{ secrets.OTEL_EXPORTER_OTLP_HEADERS }}"
             export OTEL_EXPORTER_OTLP_PROTOCOL="http/protobuf"
+            export OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED=true
             pip install -r scripts/requirements.txt
+            opentelemetry-bootstrap -a install
             if [ -z "${{ github.head_ref }}" ];
             then
               last_successful_commit=$(opentelemetry-instrument python scripts/services.py --last-green --owner ${{ github.repository_owner }} --repo ${{ github.event.repository.name }} --branch ${{ github.ref_name }})

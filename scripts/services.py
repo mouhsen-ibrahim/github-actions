@@ -6,6 +6,11 @@ from typing_extensions import List
 import subprocess, requests
 from typing import Optional
 
+from opentelemetry import trace
+
+# Acquire a tracer
+tracer = trace.get_tracer("github-actions-srvices")
+
 class Service:
     def __init__(self, path: str):
         self.path = path
@@ -40,7 +45,9 @@ def detect_services():
     for root, dirs, files in os.walk('.'):
         for file in files:
             if file == "Buildfile.yaml":
-                services.append(Service(root))
+                with tracer.start_as_current_span("detect_services") as detect_services:
+                    detect_services.set_attribute("root", root)
+                    services.append(Service(root))
     return services
 
 def is_sub_path(path1 : str, path2 : str) -> bool:
@@ -89,8 +96,10 @@ def get_changed_services(changes : List[str], config) -> List[Service]:
     return list(dict.fromkeys(all_services))
 
 def compare_services(cmp : str, config):
-    changes = run_git("diff", "--name-only", cmp)
-    return get_changed_services(changes.split("\n"), config)
+    with tracer.start_as_current_span("compare_services") as compare_services:
+        changes = run_git("diff", "--name-only", cmp)
+        compare_services.set_attribute("cmp", cmp)
+        return get_changed_services(changes.split("\n"), config)
 
 def previous_commit() -> str:
     return run_git("rev-parse", "HEAD~1")
