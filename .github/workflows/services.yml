@@ -52,9 +52,9 @@ jobs:
             echo 'services=${{ github.event.inputs.services }}' >> $GITHUB_OUTPUT
           else
             export OTEL_RESOURCE_ATTRIBUTES="service.name=github-actions-services,service.namespace=github-actions,deployment.environment=dev"
-            export OTEL_EXPORTER_OTLP_ENDPOINT="https://otlp-gateway-prod-eu-west-2.grafana.net/otlp" \
-            export OTEL_EXPORTER_OTLP_HEADERS="${{ secrets.OTEL_EXPORTER_OTLP_HEADERS }}" \
-            export OTEL_EXPORTER_OTLP_PROTOCOL="http/protobuf" \
+            export OTEL_EXPORTER_OTLP_ENDPOINT="https://otlp-gateway-prod-eu-west-2.grafana.net/otlp"
+            export OTEL_EXPORTER_OTLP_HEADERS="${{ secrets.OTEL_EXPORTER_OTLP_HEADERS }}"
+            export OTEL_EXPORTER_OTLP_PROTOCOL="http/protobuf"
             pip install -r scripts/requirements.txt
             if [ -z "${{ github.head_ref }}" ];
             then
