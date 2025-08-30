@@ -48,7 +48,7 @@ def get_services_by_type(services : List[dict], type : str) -> List[dict]:
 
 def get_changed_services(changes : List[str]) -> List[dict]:
     services = detect_services()
-    if "Makefile.variables" or ".github/workflows/services.yml" in changes:
+    if "Makefile.variables" in changes or ".github/workflows/services.yml" in changes:
         return services
     additional_services = []
     if "go.Dockerfile" in changes:
