@@ -35,3 +35,24 @@ additional_services:
     trigger:
       files:
         - "terraform.Dockerfile"
+  - name: frontend services
+    selector:
+      attributes:
+        team: frontend
+    trigger:
+      files:
+        - "frontend.vars"
+  - name: backend services
+    selector:
+      attributes:
+        team: backend
+    trigger:
+      files:
+        - "backend.vars"
+  - name: sre services
+    selector:
+      attributes:
+        team: sre
+    trigger:
+      files:
+        - "sre.vars"
