@@ -9,7 +9,7 @@ from typing import Optional
 class Service:
     def __init__(self, path: str):
         self.path = path
-        with open(self.path, 'r') as f:
+        with open(os.path.join(self.path, "Buildfile.yaml"), 'r') as f:
             self.data = yaml.safe_load(f)
             self.data["path"] = self.path
     def __repr__(self):
@@ -31,7 +31,7 @@ def detect_services():
     for root, dirs, files in os.walk('.'):
         for file in files:
             if file == "Buildfile.yaml":
-                services.append(Service(os.path.join(root, file)))
+                services.append(Service(root))
     return services
 
 def is_sub_path(path1 : str, path2 : str) -> bool:
