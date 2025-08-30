@@ -1,5 +1,4 @@
 opentelemetry-distro
-opentelemetry-instrumentation
 opentelemetry-exporter-otlp
 pytest
 pytest-cov
