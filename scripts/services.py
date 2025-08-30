@@ -77,17 +77,6 @@ def get_changed_services(changes : List[str], config) -> List[Service]:
         changed_files = get_triggers(c.get("trigger", {}))
         if any(c in changes for c in changed_files):
             additional_services.extend(get_services_by_selector(c.get("selector", {}), services))
-    #if "Makefile.variables" in changes or ".github/workflows/services.yml" in changes or "scripts/services.py" in changes:
-    #    return services
-    #additional_services = []
-    #if "go.Dockerfile" in changes:
-    #    additional_services.extend(get_services_by_kind(services, "go"))
-    #if "python.Dockerfile" in changes:
-    #    additional_services.extend(get_services_by_kind(services, "python"))
-    #if "node.Dockerfile" in changes:
-    #    additional_services.extend(get_services_by_kind(services, "node"))
-    #if "terraform.Dockerfile" in changes:
-    #    additional_services.extend(get_services_by_kind(services, "terraform"))
     changed_services = [service for service in services if changed_service(service.path, changes)]
 
     # Use dict.fromkeys() to preserve order while removing duplicates

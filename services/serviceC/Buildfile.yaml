@@ -1,6 +1,7 @@
 name: serviceC
 description: Service C for demonstration
 version: 1.5.2
+team: sre
 kind: terraform
 artifact: terraform_plan
 artifact_path: services/serviceC/terraform-plan
