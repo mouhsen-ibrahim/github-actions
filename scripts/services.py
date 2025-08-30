@@ -6,6 +6,16 @@ from typing_extensions import List
 import subprocess, requests, re
 from typing import Optional, Tuple
 
+class Service:
+    def __init__(self, path: str):
+        self.path = path
+        with open(self.path, 'r') as f:
+            self.data = yaml.safe_load(f)
+            self.name = self.data.get("name", "")
+            self.kind = self.data.get("kind", "")
+    def __repr__(self):
+        return str(self.data)
+
 GITHUB_API = "https://api.github.com"
 
 def run_git(*args: str, cwd: Optional[str] = None) -> str:
@@ -22,14 +32,7 @@ def detect_services():
     for root, dirs, files in os.walk('.'):
         for file in files:
             if file == "Buildfile.yaml":
-                with open(os.path.join(root, file), 'r') as f:
-                    data = yaml.safe_load(f)
-                    service = {
-                        "path": root
-                    }
-                    service = service | data
-                    service["name"] = service.get("name", "")
-                    services.append(service)
+                services.append(Service(os.path.join(root, file)))
     return services
 
 def is_sub_path(path1 : str, path2 : str) -> bool:
@@ -43,10 +46,10 @@ def changed_service(path : str, changes : List[str]) -> bool:
             return True
     return False
 
-def get_services_by_kind(services : List[dict], type : str) -> List[dict]:
-    return [service for service in services if service.get("kind") == type]
+def get_services_by_kind(services : List[Service], type : str) -> List[Service]:
+    return [service for service in services if service.data.get("kind") == type]
 
-def get_changed_services(changes : List[str]) -> List[dict]:
+def get_changed_services(changes : List[str]) -> List[Service]:
     services = detect_services()
     if "Makefile.variables" in changes or ".github/workflows/services.yml" in changes:
         return services
@@ -59,7 +62,7 @@ def get_changed_services(changes : List[str]) -> List[dict]:
         additional_services.extend(get_services_by_kind(services, "node"))
     if "terraform.Dockerfile" in changes:
         additional_services.extend(get_services_by_kind(services, "terraform"))
-    changed_services = [service for service in services if changed_service(service["path"], changes)]
+    changed_services = [service for service in services if changed_service(service.path, changes)]
     return changed_services + additional_services
 
 def compare_services(cmp : str):
