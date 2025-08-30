@@ -81,7 +81,7 @@ def get_changed_services(changes : List[str], config) -> List[Service]:
     for service in services:
         if service.data.get("dependencies", []) != []:
             for dependency in service.data["dependencies"]:
-                if dependency in [s.name for s in changed_services]:
+                if dependency in [s.data.get("name") for s in changed_services]:
                     changed_services.append(service)
 
     # Use dict.fromkeys() to preserve order while removing duplicates
