@@ -57,28 +57,46 @@ def changed_service(path : str, changes : List[str]) -> bool:
 def get_services_by_kind(services : List[Service], type : str) -> List[Service]:
     return [service for service in services if service.data.get("kind") == type]
 
-def get_changed_services(changes : List[str]) -> List[Service]:
-    services = detect_services()
-    if "Makefile.variables" in changes or ".github/workflows/services.yml" in changes or "scripts/services.py" in changes:
+def get_triggers(config):
+    return config.get.get("files", [])
+
+def get_services_by_selector(selector, services) -> List[Service]:
+    if selector.get("all"):
         return services
+    ret = []
+    for attribute_name, attribute_value in selector.get("attributes", {}).item():
+        for service in services:
+            if service.data.get(attribute_name) == attribute_value:
+                ret.append(service)
+    return ret
+
+def get_changed_services(changes : List[str], config) -> List[Service]:
+    services = detect_services()
     additional_services = []
-    if "go.Dockerfile" in changes:
-        additional_services.extend(get_services_by_kind(services, "go"))
-    if "python.Dockerfile" in changes:
-        additional_services.extend(get_services_by_kind(services, "python"))
-    if "node.Dockerfile" in changes:
-        additional_services.extend(get_services_by_kind(services, "node"))
-    if "terraform.Dockerfile" in changes:
-        additional_services.extend(get_services_by_kind(services, "terraform"))
+    for c in config:
+        changed_files = get_triggers(c.get("triggers", {}))
+        if any(c in changes for c in changed_files):
+            additional_services.extend(get_services_by_selector(c.get("selector", {}), services))
+    #if "Makefile.variables" in changes or ".github/workflows/services.yml" in changes or "scripts/services.py" in changes:
+    #    return services
+    #additional_services = []
+    #if "go.Dockerfile" in changes:
+    #    additional_services.extend(get_services_by_kind(services, "go"))
+    #if "python.Dockerfile" in changes:
+    #    additional_services.extend(get_services_by_kind(services, "python"))
+    #if "node.Dockerfile" in changes:
+    #    additional_services.extend(get_services_by_kind(services, "node"))
+    #if "terraform.Dockerfile" in changes:
+    #    additional_services.extend(get_services_by_kind(services, "terraform"))
     changed_services = [service for service in services if changed_service(service.path, changes)]
 
     # Use dict.fromkeys() to preserve order while removing duplicates
     all_services = changed_services + additional_services
     return list(dict.fromkeys(all_services))
 
-def compare_services(cmp : str):
+def compare_services(cmp : str, config):
     changes = run_git("diff", "--name-only", cmp)
-    return get_changed_services(changes.split("\n"))
+    return get_changed_services(changes.split("\n"), config)
 
 def current_commit() -> str:
     return run_git("rev-parse", "HEAD")
@@ -131,6 +149,7 @@ def main():
     parser = argparse.ArgumentParser(description='Detect services in the repository')
     parser.add_argument('--all', action='store_true', help='Find all services')
     parser.add_argument("--cmp", type=str, help="Compare with a git commit")
+    parser.add_argument("--config", type=str, help="Configuration file", default="services.yaml")
     parser.add_argument("--last-green", action="store_true", help="Return changed services since the last green build")
     parser.add_argument("--branch", type=str, help="Branch to find last green commit")
     parser.add_argument("--repo", type=str, help="Github repository name")
@@ -141,7 +160,9 @@ def main():
     if args.all:
         print(detect_services())
     if args.cmp:
-        print(compare_services(args.cmp))
+        with open(args.config, "r") as f:
+            config = yaml.safe_load(f)
+            print(compare_services(args.cmp, config))
     if args.last_green:
         if args.branch is None or args.repo is None or args.owner is None:
             raise ValueError("Branch, repo and owner must be specified")

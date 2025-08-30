@@ -1,0 +1,36 @@
+additional_services:
+  - name: all services
+    selector:
+      all: true
+    trigger:
+      files:
+        - ".github/workflows/services.yml"
+        - "Makefile.variables"
+  - name: go services
+    selector:
+      attributes:
+        kind: go
+    trigger:
+      files:
+        - "go.Dockerfile"
+  - name: node services
+    selector:
+      attributes:
+        kind: node
+    trigger:
+      files:
+        - "node.Dockerfile"
+  - name: python services
+    selector:
+      attributes:
+        kind: python
+    trigger:
+      files:
+        - "python.Dockerfile"
+  - name: terraform services
+    selector:
+      attributes:
+        kind: terraform
+    trigger:
+      files:
+        - "terraform.Dockerfile"
