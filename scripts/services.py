@@ -3,8 +3,26 @@
 import argparse
 import os, yaml
 from typing_extensions import List
-import subprocess, requests, re
-from typing import Optional, Tuple
+import subprocess, requests
+from typing import Optional
+
+class Service:
+    def __init__(self, path: str):
+        self.path = path
+        with open(os.path.join(self.path, "Buildfile.yaml"), 'r') as f:
+            self.data = yaml.safe_load(f)
+            self.data["path"] = self.path
+
+    def __repr__(self):
+        return str(self.data)
+
+    def __eq__(self, other):
+        if not isinstance(other, Service):
+            return False
+        return self.path == other.path
+
+    def __hash__(self):
+        return hash(self.path)
 
 GITHUB_API = "https://api.github.com"
 
@@ -22,14 +40,7 @@ def detect_services():
     for root, dirs, files in os.walk('.'):
         for file in files:
             if file == "Buildfile.yaml":
-                with open(os.path.join(root, file), 'r') as f:
-                    data = yaml.safe_load(f)
-                    service = {
-                        "path": root
-                    }
-                    service = service | data
-                    service["name"] = service.get("name", "")
-                    services.append(service)
+                services.append(Service(root))
     return services
 
 def is_sub_path(path1 : str, path2 : str) -> bool:
@@ -43,11 +54,31 @@ def changed_service(path : str, changes : List[str]) -> bool:
             return True
     return False
 
-def compare_services(cmp : str):
+def get_services_by_kind(services : List[Service], type : str) -> List[Service]:
+    return [service for service in services if service.data.get("kind") == type]
+
+def get_changed_services(changes : List[str]) -> List[Service]:
     services = detect_services()
+    if "Makefile.variables" in changes or ".github/workflows/services.yml" in changes or "scripts/services.py" in changes:
+        return services
+    additional_services = []
+    if "go.Dockerfile" in changes:
+        additional_services.extend(get_services_by_kind(services, "go"))
+    if "python.Dockerfile" in changes:
+        additional_services.extend(get_services_by_kind(services, "python"))
+    if "node.Dockerfile" in changes:
+        additional_services.extend(get_services_by_kind(services, "node"))
+    if "terraform.Dockerfile" in changes:
+        additional_services.extend(get_services_by_kind(services, "terraform"))
+    changed_services = [service for service in services if changed_service(service.path, changes)]
+
+    # Use dict.fromkeys() to preserve order while removing duplicates
+    all_services = changed_services + additional_services
+    return list(dict.fromkeys(all_services))
+
+def compare_services(cmp : str):
     changes = run_git("diff", "--name-only", cmp)
-    changed_services = [service for service in services if changed_service(service["path"], changes.split("\n"))]
-    return changed_services
+    return get_changed_services(changes.split("\n"))
 
 def current_commit() -> str:
     return run_git("rev-parse", "HEAD")
