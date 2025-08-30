@@ -13,6 +13,8 @@ class Service:
             self.data = yaml.safe_load(f)
             self.name = self.data.get("name", "")
             self.kind = self.data.get("kind", "")
+            self.artifact = self.data.get("artifact", "")
+            self.artifact_path = self.data.get("artifact_path", "")
     def __repr__(self):
         return str(self.data)
 
