@@ -41,14 +41,13 @@ def run_git(*args: str, cwd: Optional[str] = None) -> str:
 
 
 def detect_services():
-    services = []
-    for root, dirs, files in os.walk('.'):
-        for file in files:
-            if file == "Buildfile.yaml":
-                with tracer.start_as_current_span("detect_services") as detect_services:
-                    detect_services.set_attribute("root", root)
+    with tracer.start_as_current_span("detect_services"):
+        services = []
+        for root, dirs, files in os.walk('.'):
+            for file in files:
+                if file == "Buildfile.yaml":
                     services.append(Service(root))
-    return services
+        return services
 
 def is_sub_path(path1 : str, path2 : str) -> bool:
     if path1.startswith("./"):
@@ -61,21 +60,21 @@ def changed_service(path : str, changes : List[str]) -> bool:
             return True
     return False
 
-def get_services_by_kind(services : List[Service], type : str) -> List[Service]:
-    return [service for service in services if service.data.get("kind") == type]
-
 def get_triggers(config):
     return config.get("files", [])
 
 def get_services_by_selector(selector, services) -> List[Service]:
-    if selector.get("all"):
-        return services
-    ret = []
-    for attribute_name, attribute_value in selector.get("attributes", {}).items():
-        for service in services:
-            if service.data.get(attribute_name) == attribute_value:
-                ret.append(service)
-    return ret
+    with tracer.start_as_current_span("get_services_by_selector") as span:
+        if selector.get("all"):
+            span.set_attribute("all", True)
+            return services
+        span.set_attribute("selector", selector)
+        ret = []
+        for attribute_name, attribute_value in selector.get("attributes", {}).items():
+            for service in services:
+                if service.data.get(attribute_name) == attribute_value:
+                    ret.append(service)
+        return ret
 
 def get_changed_services(changes : List[str], config) -> List[Service]:
     services = detect_services()
@@ -149,31 +148,39 @@ def get_last_green_commit(owner: str, repo: str, branch: str, token: str,
 
 
 def main():
-    parser = argparse.ArgumentParser(description='Detect services in the repository')
-    parser.add_argument('--all', action='store_true', help='Find all services')
-    parser.add_argument("--cmp", type=str, help="Compare with a git commit")
-    parser.add_argument("--config", type=str, help="Configuration file", default="services.yaml")
-    parser.add_argument("--last-green", action="store_true", help="Return changed services since the last green build")
-    parser.add_argument("--branch", type=str, help="Branch to find last green commit")
-    parser.add_argument("--repo", type=str, help="Github repository name")
-    parser.add_argument("--owner", type=str, help="Github repository owner")
-    parser.add_argument("--workflow", type=str, help="Github workflow name")
-    args = parser.parse_args()
+    with tracer.start_as_current_span("main") as span:
+        parser = argparse.ArgumentParser(description='Detect services in the repository')
+        parser.add_argument('--all', action='store_true', help='Find all services')
+        parser.add_argument("--cmp", type=str, help="Compare with a git commit")
+        parser.add_argument("--config", type=str, help="Configuration file", default="services.yaml")
+        parser.add_argument("--last-green", action="store_true", help="Return changed services since the last green build")
+        parser.add_argument("--branch", type=str, help="Branch to find last green commit")
+        parser.add_argument("--repo", type=str, help="Github repository name")
+        parser.add_argument("--owner", type=str, help="Github repository owner")
+        parser.add_argument("--workflow", type=str, help="Github workflow name")
+        args = parser.parse_args()
 
-    if args.all:
-        print(detect_services())
-    if args.cmp:
-        with open(args.config, "r") as f:
-            config = yaml.safe_load(f)
-            print(compare_services(args.cmp, config))
-    if args.last_green:
-        if args.branch is None or args.repo is None or args.owner is None:
-            raise ValueError("Branch, repo and owner must be specified")
-        token = os.environ.get("GITHUB_TOKEN")
-        if token is None:
-            raise ValueError("GITHUB_TOKEN environment variable is not set")
-        last_green_commit = get_last_green_commit(args.owner, args.repo, args.branch, token, args.workflow)
-        print(last_green_commit)
+        if args.all:
+            span.set_attribute("all", True)
+            print(detect_services())
+        if args.cmp:
+            span.set_attribute("cmp", args.cmp)
+            with open(args.config, "r") as f:
+                config = yaml.safe_load(f)
+                print(compare_services(args.cmp, config))
+        if args.last_green:
+            span.set_attribute("last_green", True)
+            if args.branch is None or args.repo is None or args.owner is None:
+                raise ValueError("Branch, repo and owner must be specified")
+            span.set_attribute("owner", args.owner)
+            span.set_attribute("repo", args.repo)
+            span.set_attribute("branch", args.branch)
+            span.set_attribute("workflow", args.workflow)
+            token = os.environ.get("GITHUB_TOKEN")
+            if token is None:
+                raise ValueError("GITHUB_TOKEN environment variable is not set")
+            last_green_commit = get_last_green_commit(args.owner, args.repo, args.branch, token, args.workflow)
+            print(last_green_commit)
 
 if __name__ == '__main__':
     main()
