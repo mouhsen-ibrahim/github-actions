@@ -43,8 +43,8 @@ def changed_service(path : str, changes : List[str]) -> bool:
             return True
     return False
 
-def get_services_by_type(services : List[dict], type : str) -> List[dict]:
-    return [service for service in services if service.get("type") == type]
+def get_services_by_kind(services : List[dict], type : str) -> List[dict]:
+    return [service for service in services if service.get("kind") == type]
 
 def get_changed_services(changes : List[str]) -> List[dict]:
     services = detect_services()
@@ -52,15 +52,15 @@ def get_changed_services(changes : List[str]) -> List[dict]:
         return services
     additional_services = []
     if "go.Dockerfile" in changes:
-        additional_services.extend(get_services_by_type(services, "go"))
+        additional_services.extend(get_services_by_kind(services, "go"))
     if "python.Dockerfile" in changes:
-        additional_services.extend(get_services_by_type(services, "python"))
+        additional_services.extend(get_services_by_kind(services, "python"))
     if "node.Dockerfile" in changes:
-        additional_services.extend(get_services_by_type(services, "node"))
+        additional_services.extend(get_services_by_kind(services, "node"))
     if "terraform.Dockerfile" in changes:
-        additional_services.extend(get_services_by_type(services, "terraform"))
+        additional_services.extend(get_services_by_kind(services, "terraform"))
     changed_services = [service for service in services if changed_service(service["path"], changes)]
-    return list(set(changed_services + additional_services))
+    return changed_services + additional_services
 
 def compare_services(cmp : str):
     changes = run_git("diff", "--name-only", cmp)
