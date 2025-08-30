@@ -3,3 +3,7 @@ terraform-plan
 *.tfstate.*
 *.tfstate
 node_modules
+.coverage
+.venv
+htmlcov
+__pycache__
