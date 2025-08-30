@@ -2,7 +2,7 @@ include ../../Makefile.variables
 build:
 	@echo "Building serviceB"
 	docker build --build-arg service=services/serviceB -t ${DOCKER_REGISTRY}/serviceb:latest -f ${ROOT}/node.Dockerfile ${ROOT}
-	#docker push ${DOCKER_REGISTRY}/serviceb:latest
+	docker push ${DOCKER_REGISTRY}/serviceb:latest
 
 run:
 	@echo "Running serviceB"
