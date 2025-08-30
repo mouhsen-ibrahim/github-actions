@@ -6,6 +6,7 @@ additional_services:
       files:
         - ".github/workflows/services.yml"
         - "Makefile.variables"
+        - "scripts/services.py"
   - name: go services
     selector:
       attributes:
