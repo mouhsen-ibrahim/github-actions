@@ -7,7 +7,7 @@ import yaml
 import requests
 from services import (
     Service, detect_services, is_sub_path, changed_service,
-    get_services_by_kind, get_triggers, get_services_by_selector,
+    get_triggers, get_services_by_selector,
     get_changed_services, compare_services, previous_commit,
     pick_first_success_run, list_runs, get_last_green_commit,
     run_git, GITHUB_API
@@ -201,22 +201,6 @@ class TestUtilityFunctions(unittest.TestCase):
         changes = ['services/serviceA/main.go', 'docs/README.md']
 
         self.assertFalse(changed_service('services/serviceC', changes))
-
-    def test_get_services_by_kind(self):
-        """Test filtering services by kind."""
-        services = [
-            MagicMock(data={'name': 'service1', 'kind': 'python'}),
-            MagicMock(data={'name': 'service2', 'kind': 'go'}),
-            MagicMock(data={'name': 'service3', 'kind': 'python'}),
-        ]
-
-        python_services = get_services_by_kind(services, 'python')
-        go_services = get_services_by_kind(services, 'go')
-
-        self.assertEqual(len(python_services), 2)
-        self.assertEqual(len(go_services), 1)
-        self.assertEqual(python_services[0].data['name'], 'service1')
-        self.assertEqual(go_services[0].data['name'], 'service2')
 
     def test_get_triggers(self):
         """Test extracting triggers from config."""
