@@ -48,7 +48,7 @@ jobs:
             echo "Last successful commit: ${last_successful_commit}"
             services_json=$(python scripts/services.py --cmp ${last_successful_commit})
             # Debug output
-            echo "Generated services JSON for debugging: $services_json"
+            echo "Generated services JSON: $services_json"
 
             echo "services=${services_json}" >> $GITHUB_OUTPUT
           fi
