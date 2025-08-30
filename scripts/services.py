@@ -87,8 +87,8 @@ def compare_services(cmp : str, config):
     changes = run_git("diff", "--name-only", cmp)
     return get_changed_services(changes.split("\n"), config)
 
-def current_commit() -> str:
-    return run_git("rev-parse", "HEAD")
+def previous_commit() -> str:
+    return run_git("rev-parse", "HEAD~1")
 
 def pick_first_success_run(runs: list) -> Optional[dict]:
     for r in runs:
@@ -130,7 +130,7 @@ def get_last_green_commit(owner: str, repo: str, branch: str, token: str,
     runs = list_runs(owner, repo, branch, token, workflow_id=workflow_id, workflow_ref=workflow)
     run = pick_first_success_run(runs)
     if not run:
-        return current_commit()
+        return previous_commit()
     return run.get("head_sha")
 
 
