@@ -1,0 +1,58 @@
+additional_services:
+  - name: all services
+    selector:
+      all: true
+    trigger:
+      files:
+        - ".github/workflows/services.yml"
+        - "Makefile.variables"
+        - "scripts/services.py"
+  - name: go services
+    selector:
+      attributes:
+        kind: go
+    trigger:
+      files:
+        - "go.Dockerfile"
+  - name: node services
+    selector:
+      attributes:
+        kind: node
+    trigger:
+      files:
+        - "node.Dockerfile"
+  - name: python services
+    selector:
+      attributes:
+        kind: python
+    trigger:
+      files:
+        - "python.Dockerfile"
+  - name: terraform services
+    selector:
+      attributes:
+        kind: terraform
+    trigger:
+      files:
+        - "terraform.Dockerfile"
+  - name: frontend services
+    selector:
+      attributes:
+        team: frontend
+    trigger:
+      files:
+        - "frontend.vars"
+  - name: backend services
+    selector:
+      attributes:
+        team: backend
+    trigger:
+      files:
+        - "backend.vars"
+  - name: sre services
+    selector:
+      attributes:
+        team: sre
+    trigger:
+      files:
+        - "sre.vars"
