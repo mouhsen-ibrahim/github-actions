@@ -31,7 +31,7 @@ ARG VCS_REF
 ARG BUILD_DATE
 LABEL org.opencontainers.image.title=${service}
 LABEL org.opencontainers.image.description="node service"
-LABEL org.opencontainers.image.url="https://github.com/mouhsen-ibrahim/github-actions"
+LABEL org.opencontainers.image.source="https://github.com/mouhsen-ibrahim/github-actions"
 LABEL org.opencontainers.image.documentation="https://github.com/mouhsen-ibrahim/github-actions#readme"
 LABEL org.opencontainers.image.version="${VERSION}"
 LABEL org.opencontainers.image.revision="${VCS_REF}"
