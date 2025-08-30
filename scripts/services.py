@@ -12,8 +12,17 @@ class Service:
         with open(os.path.join(self.path, "Buildfile.yaml"), 'r') as f:
             self.data = yaml.safe_load(f)
             self.data["path"] = self.path
+
     def __repr__(self):
         return str(self.data)
+
+    def __eq__(self, other):
+        if not isinstance(other, Service):
+            return False
+        return self.path == other.path
+
+    def __hash__(self):
+        return hash(self.path)
 
 GITHUB_API = "https://api.github.com"
 
@@ -62,7 +71,10 @@ def get_changed_services(changes : List[str]) -> List[Service]:
     if "terraform.Dockerfile" in changes:
         additional_services.extend(get_services_by_kind(services, "terraform"))
     changed_services = [service for service in services if changed_service(service.path, changes)]
-    return changed_services + additional_services
+
+    # Use dict.fromkeys() to preserve order while removing duplicates
+    all_services = changed_services + additional_services
+    return list(dict.fromkeys(all_services))
 
 def compare_services(cmp : str):
     changes = run_git("diff", "--name-only", cmp)
