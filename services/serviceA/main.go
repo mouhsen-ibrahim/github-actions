@@ -16,7 +16,7 @@ func main() {
 
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		replyJSON(w, http.StatusOK, map[string]any{
-			"message": "hello from Go 👋",
+			"message": "hello 1 from Go 👋",
 			"path":    r.URL.Path,
 		})
 	})

@@ -2,6 +2,7 @@ name: serviceA
 description: Service A for demonstration
 version: 1.0.0
 kind: go
+team: backend
 build:
   dockerfile: Dockerfile
   context: .

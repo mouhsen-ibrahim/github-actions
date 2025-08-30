@@ -2,6 +2,7 @@ name: serviceB
 description: Service B for demonstration
 version: 2.1.0
 kind: node
+team: frontend
 build:
   dockerfile: Dockerfile
   context: .
