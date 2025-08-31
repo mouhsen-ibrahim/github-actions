@@ -3,9 +3,9 @@ description: Service D for demonstration
 version: 3.0.1
 kind: python
 team: backend
-artifact: docker_image
+artifact: docker_image_serviced
 artifact_path: services/serviceD/docker.serviced.tar
-artifact_load: docker_image
+artifact_load: docker_image_serviced
 build:
   dockerfile: Dockerfile
   context: .

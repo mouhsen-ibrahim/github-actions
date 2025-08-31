@@ -3,9 +3,9 @@ description: Service B for demonstration
 version: 2.1.0
 kind: node
 team: frontend
-artifact: docker_image
+artifact: docker_image_serviceb
 artifact_path: services/serviceB/docker.serviceb.tar
-artifact_load: docker_image
+artifact_load: docker_image_serviceb
 build:
   dockerfile: Dockerfile
   context: .

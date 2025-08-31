@@ -3,9 +3,9 @@ description: Service A for demonstration
 version: 1.0.0
 kind: go
 team: backend
-artifact: docker_image
+artifact: docker_image_servicea
 artifact_path: services/serviceA/docker.servicea.tar
-artifact_load: docker_image
+artifact_load: docker_image_servicea
 build:
   dockerfile: Dockerfile
   context: .
