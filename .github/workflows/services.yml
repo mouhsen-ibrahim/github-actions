@@ -127,8 +127,17 @@ jobs:
           else
             echo "No Makefile found for testing in ${{ matrix.service.path }}"
           fi
+  publish:
+    needs: [setup, build]
+    runs-on: ubuntu-latest
+    #if: ${{ github.ref_name == 'main' }}
+    steps:
+      - uses: actions/download-artifact@v5
+        if: ${{ matrix.service.artifact_load != '' }}
+        with:
+          name: ${{ matrix.service.artifact_load }}
+          path: "${{ matrix.service.artifact_path }}"
       - name: Publish service
-        if: ${{ github.ref_name == 'main' }}
         run: |
           echo "Publishing service: ${{ matrix.service.name }}"
           cd "${{ matrix.service.path }}"

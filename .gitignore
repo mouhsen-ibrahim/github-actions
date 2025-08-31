@@ -7,3 +7,4 @@ node_modules
 .venv
 htmlcov
 __pycache__
+docker.*.tar
