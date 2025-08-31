@@ -5,6 +5,9 @@ BUILD_DATE := $(shell date -u +"%Y-%m-%dT%H:%M:%SZ")
 build:
 	@echo "Building serviceA"
 	docker build --build-arg service=services/serviceA --build-arg VERSION=$(VERSION) --build-arg VCS_REF=$(VCS_REF) --build-arg BUILD_DATE=$(BUILD_DATE) -t ${DOCKER_REGISTRY}/servicea:latest -f ${ROOT}/go.Dockerfile ${ROOT}
+
+publish:
+	@echo "Publishing serviceA"
 	docker push ${DOCKER_REGISTRY}/servicea:latest
 
 run:
@@ -18,6 +21,3 @@ clean:
 
 deploy:
 	@echo "Deploying serviceA"
-
-publish:
-	@echo "Publishing serviceA"

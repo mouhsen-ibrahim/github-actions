@@ -5,6 +5,9 @@ BUILD_DATE := $(shell date -u +"%Y-%m-%dT%H:%M:%SZ")
 build:
 	@echo "Building serviceD"
 	docker build --build-arg service=services/serviceD --build-arg VERSION=$(VERSION) --build-arg VCS_REF=$(VCS_REF) --build-arg BUILD_DATE=$(BUILD_DATE) -t ${DOCKER_REGISTRY}/serviced:latest -f ${ROOT}/python.Dockerfile ${ROOT}
+
+publish:
+	@echo "Publishing serviceD"
 	docker push ${DOCKER_REGISTRY}/serviced:latest
 
 run:
@@ -18,6 +21,3 @@ clean:
 
 deploy:
 	@echo "Deploying serviceD"
-
-publish:
-	@echo "Publishing serviceD"
