@@ -4,8 +4,8 @@ version: 1.0.0
 kind: go
 team: backend
 artifact: docker_image
-artifact_path: services/serviceA/servicea.tar
-artifact_load: services/serviceA/servicea.tar
+artifact_path: services/serviceA/docker.servicea.tar
+artifact_load: docker_image
 build:
   dockerfile: Dockerfile
   context: .
