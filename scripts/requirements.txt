@@ -1,0 +1,5 @@
+opentelemetry-distro
+opentelemetry-exporter-otlp
+pytest
+pytest-cov
+pyyaml

@@ -8,7 +8,5 @@ artifact_path: services/serviceC/terraform-plan
 build:
   dockerfile: Dockerfile
   context: .
-dependencies:
-  - serviceD
 environment:
   - NODE_ENV=development

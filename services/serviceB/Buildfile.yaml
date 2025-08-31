@@ -6,8 +6,6 @@ team: frontend
 build:
   dockerfile: Dockerfile
   context: .
-dependencies:
-  - serviceC
 environment:
   - NODE_ENV=staging
   - PORT=3000

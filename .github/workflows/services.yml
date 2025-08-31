@@ -33,10 +33,10 @@ jobs:
           fetch-depth: 0
       - name: run services tests
         if: ${{ github.event_name != 'workflow_dispatch' }}
-        run: cd scripts && make test
+        run: cd scripts && pip install -r requirements.txt && make test
       - name: run services coverage
         if: ${{ github.event_name != 'workflow_dispatch' }}
-        run: cd scripts && pip install pytest pytest-cov && make coverage
+        run: cd scripts && make coverage
       - name: save coverage report
         if: ${{ github.event_name != 'workflow_dispatch' }}
         uses: actions/upload-artifact@v4
@@ -51,14 +51,21 @@ jobs:
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
             echo 'services=${{ github.event.inputs.services }}' >> $GITHUB_OUTPUT
           else
+            export OTEL_RESOURCE_ATTRIBUTES="git.commit=${{ github.sha }},service.name=github-actions-services,service.namespace=github-actions,deployment.environment=dev"
+            export OTEL_EXPORTER_OTLP_ENDPOINT="https://otlp-gateway-prod-eu-west-2.grafana.net/otlp"
+            export OTEL_EXPORTER_OTLP_HEADERS="${{ secrets.OTEL_EXPORTER_OTLP_HEADERS }}"
+            export OTEL_EXPORTER_OTLP_PROTOCOL="http/protobuf"
+            export OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED=true
+            pip install -r scripts/requirements.txt
+            opentelemetry-bootstrap -a install
             if [ -z "${{ github.head_ref }}" ];
             then
-              last_successful_commit=$(python scripts/services.py --last-green --owner ${{ github.repository_owner }} --repo ${{ github.event.repository.name }} --branch ${{ github.ref_name }})
+              last_successful_commit=$(opentelemetry-instrument python scripts/services.py --last-green --owner ${{ github.repository_owner }} --repo ${{ github.event.repository.name }} --branch ${{ github.ref_name }})
             else
-              last_successful_commit=$(python scripts/services.py --last-green --owner ${{ github.repository_owner }} --repo ${{ github.event.repository.name }} --branch ${{ github.head_ref }})
+              last_successful_commit=$(opentelemetry-instrument python scripts/services.py --last-green --owner ${{ github.repository_owner }} --repo ${{ github.event.repository.name }} --branch ${{ github.head_ref }})
             fi
             echo "Last successful commit: ${last_successful_commit}"
-            services_json=$(python scripts/services.py --cmp ${last_successful_commit})
+            services_json=$(opentelemetry-instrument python scripts/services.py --cmp ${last_successful_commit})
             # Debug output
             echo "Generated services JSON: $services_json"
 

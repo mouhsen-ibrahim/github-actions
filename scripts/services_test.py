@@ -1,16 +1,15 @@
 import unittest
-from unittest.mock import patch, mock_open, MagicMock, call
+from unittest.mock import patch, MagicMock
 import os
 import tempfile
 import shutil
 import yaml
-import requests
 from services import (
     Service, detect_services, is_sub_path, changed_service,
-    get_services_by_kind, get_triggers, get_services_by_selector,
-    get_changed_services, compare_services, current_commit,
+    get_triggers, get_services_by_selector,
+    get_changed_services, compare_services, previous_commit,
     pick_first_success_run, list_runs, get_last_green_commit,
-    run_git, GITHUB_API
+    run_git
 )
 
 
@@ -90,11 +89,11 @@ class TestRunGit(unittest.TestCase):
         """Test successful git command execution."""
         mock_check_output.return_value = b'commit_hash\n'
 
-        result = run_git('rev-parse', 'HEAD')
+        result = run_git('rev-parse', 'HEAD~1')
 
         self.assertEqual(result, 'commit_hash')
         mock_check_output.assert_called_once_with(
-            ['git', 'rev-parse', 'HEAD'],
+            ['git', 'rev-parse', 'HEAD~1'],
             cwd=None,
             stderr=unittest.mock.ANY
         )
@@ -201,22 +200,6 @@ class TestUtilityFunctions(unittest.TestCase):
         changes = ['services/serviceA/main.go', 'docs/README.md']
 
         self.assertFalse(changed_service('services/serviceC', changes))
-
-    def test_get_services_by_kind(self):
-        """Test filtering services by kind."""
-        services = [
-            MagicMock(data={'name': 'service1', 'kind': 'python'}),
-            MagicMock(data={'name': 'service2', 'kind': 'go'}),
-            MagicMock(data={'name': 'service3', 'kind': 'python'}),
-        ]
-
-        python_services = get_services_by_kind(services, 'python')
-        go_services = get_services_by_kind(services, 'go')
-
-        self.assertEqual(len(python_services), 2)
-        self.assertEqual(len(go_services), 1)
-        self.assertEqual(python_services[0].data['name'], 'service1')
-        self.assertEqual(go_services[0].data['name'], 'service2')
 
     def test_get_triggers(self):
         """Test extracting triggers from config."""
@@ -357,17 +340,40 @@ class TestCompareServices(unittest.TestCase):
         mock_get_changed.assert_called_once_with(['file1.py', 'file2.go'], config)
         self.assertEqual(result, [mock_service])
 
+    @patch('services.run_git')
+    @patch('services.detect_services')
+    def test_compare_services_with_dependencies(self, mock_detect_services, mock_run_git):
+        """Test that a changed service causes dependent services to be included."""
+        # Create two mock services: dep1 (changed) and test_service (depends on dep1)
+        mock_dep = MagicMock(path='services/dep1', data={'name': 'dep1', 'dependencies': []})
+        mock_service = MagicMock(path='services/test_service', data={'name': 'test_service', 'dependencies': ['dep1']})
+        # Order doesn't matter much, but include both in detect_services
+        mock_detect_services.return_value = [mock_dep, mock_service]
 
-class TestCurrentCommit(unittest.TestCase):
+        # Simulate git diff listing a file under dep1 (so dep1 is changed)
+        mock_run_git.return_value = 'services/dep1/main.go'
+
+        config = {'additional_services': []}
+        result = compare_services('HEAD~1', config)
+
+        mock_run_git.assert_called_once_with('diff', '--name-only', 'HEAD~1')
+        # Expect both the changed service and the dependent service to be returned
+        result_names = [r.data['name'] for r in result]
+        self.assertIn('dep1', result_names)
+        self.assertIn('test_service', result_names)
+        self.assertEqual(len(result_names), 2)
+
+
+class TestPreviousCommit(unittest.TestCase):
 
     @patch('services.run_git')
-    def test_current_commit(self, mock_run_git):
-        """Test getting current commit hash."""
+    def test_previous_commit(self, mock_run_git):
+        """Test getting previous commit hash."""
         mock_run_git.return_value = 'abc123def456'
 
-        result = current_commit()
+        result = previous_commit()
 
-        mock_run_git.assert_called_once_with('rev-parse', 'HEAD')
+        mock_run_git.assert_called_once_with('rev-parse', 'HEAD~1')
         self.assertEqual(result, 'abc123def456')
 
 
@@ -471,7 +477,7 @@ class TestGetLastGreenCommit(unittest.TestCase):
 
     @patch('services.list_runs')
     @patch('services.pick_first_success_run')
-    @patch('services.current_commit')
+    @patch('services.previous_commit')
     def test_get_last_green_commit_found(self, mock_current, mock_pick, mock_list):
         """Test getting last green commit when a successful run is found."""
         mock_list.return_value = [{'id': 1}]
@@ -484,16 +490,16 @@ class TestGetLastGreenCommit(unittest.TestCase):
 
     @patch('services.list_runs')
     @patch('services.pick_first_success_run')
-    @patch('services.current_commit')
+    @patch('services.previous_commit')
     def test_get_last_green_commit_not_found(self, mock_current, mock_pick, mock_list):
         """Test fallback to current commit when no successful run is found."""
         mock_list.return_value = [{'id': 1}]
         mock_pick.return_value = None
-        mock_current.return_value = 'current_commit_456'
+        mock_current.return_value = 'previous_commit_456'
 
         result = get_last_green_commit('owner', 'repo', 'main', 'token')
 
-        self.assertEqual(result, 'current_commit_456')
+        self.assertEqual(result, 'previous_commit_456')
         mock_current.assert_called_once()
 
     @patch('services.list_runs')

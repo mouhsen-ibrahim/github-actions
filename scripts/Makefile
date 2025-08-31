@@ -7,3 +7,6 @@ coverage:
 	@coverage run --branch --source=services -m unittest discover -p "*_test.py"
 	@coverage report -m --fail-under=75 --omit "*/site-packages/*,*/dist-packages/*,*/.venv/*,*_test.py"
 	@coverage html
+
+run-all:
+	@opentelemetry-instrument --logs_exporter otlp python services.py --all
