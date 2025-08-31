@@ -26,6 +26,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       services: ${{ steps.set-services.outputs.services }}
+      infra: ${{ steps.set-services.outputs.infra }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v5
@@ -66,10 +67,13 @@ jobs:
             fi
             echo "Last successful commit: ${last_successful_commit}"
             services_json=$(opentelemetry-instrument python scripts/services.py --cmp ${last_successful_commit})
+            infra_json=$(opentelemetry-instrument python scripts/services.py --cmp ${last_successful_commit} --infra)
             # Debug output
             echo "Generated services JSON: $services_json"
+            echo "Generated infra JSON: $infra_json"
 
             echo "services=${services_json}" >> $GITHUB_OUTPUT
+            echo "infra=${infra_json}" >> $GITHUB_OUTPUT
           fi
 
   build:
@@ -177,11 +181,30 @@ jobs:
           else
             echo "No Makefile found for publishing in ${{ matrix.service.path }}"
           fi
-
-  deploy:
-    needs: [publish, setup]
+  deploy-infra:
+    needs: [setup]
     runs-on: ubuntu-latest
-    if: ${{ github.ref_name == 'main' }}
+    #if: ${{ github.ref_name == 'main' }}
+    strategy:
+      matrix:
+        service: ${{ fromJson(needs.setup.outputs.infra) }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Deploy service
+        run: |
+          echo "Deploying service: ${{ matrix.service.name }}"
+          cd "${{ matrix.service.path }}"
+          if [ -f "Makefile" ]; then
+            make deploy
+          else
+            echo "No Makefile found for deployment in ${{ matrix.service.path }}"
+          fi
+  deploy-services:
+    needs: [setup]
+    runs-on: ubuntu-latest
+    #if: ${{ github.ref_name == 'main' }}
     strategy:
       matrix:
         service: ${{ fromJson(needs.setup.outputs.services) }}
