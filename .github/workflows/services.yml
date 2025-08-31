@@ -136,6 +136,8 @@ jobs:
       matrix:
         service: ${{ fromJson(needs.setup.outputs.services) }}
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
       - uses: actions/download-artifact@v5
         if: ${{ matrix.service.artifact_load != '' }}
         with:
@@ -152,7 +154,7 @@ jobs:
           fi
 
   deploy:
-    needs: [setup, build]
+    needs: [publish]
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main'
     strategy:
