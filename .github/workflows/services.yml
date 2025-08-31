@@ -168,7 +168,7 @@ jobs:
           fi
 
   deploy:
-    needs: [publish]
+    needs: [publish, setup]
     runs-on: ubuntu-latest
     if: ${{ github.ref_name == 'main' }}
     strategy:
