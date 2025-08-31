@@ -9,7 +9,7 @@ build:
 
 publish:
 	@echo "Publishing serviceA"
-	@docker load -i docker.servicea.tar
+	@docker load -i docker.servicea.tar/docker.servicea.tar
 	@docker push ${DOCKER_REGISTRY}/servicea:latest
 
 run:
