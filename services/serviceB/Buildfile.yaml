@@ -3,7 +3,7 @@ description: Service B for demonstration
 version: 2.1.0
 kind: node
 team: frontend
-artifact_name: docker_image
+artifact: docker_image
 artifact_path: services/serviceC/docker.servicec.tar
 artifact_load: docker_image
 build:
