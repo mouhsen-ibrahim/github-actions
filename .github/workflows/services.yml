@@ -143,6 +143,13 @@ jobs:
         with:
           name: ${{ matrix.service.artifact_load }}
           path: "${{ matrix.service.artifact_path }}"
+      - name: debug output
+        run: |
+          echo "Debug output for service: ${{ matrix.service.name }}"
+          cd "${{ matrix.service.path }}"
+          ls -l
+          ls -l ${{ matrix.service.artifact_load }}
+          ls -l ${{ matrix.service.artifact_path }}
       - name: Publish service
         run: |
           echo "Publishing service: ${{ matrix.service.name }}"
