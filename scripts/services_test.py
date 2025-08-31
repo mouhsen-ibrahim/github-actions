@@ -1,16 +1,15 @@
 import unittest
-from unittest.mock import patch, mock_open, MagicMock, call
+from unittest.mock import patch, MagicMock
 import os
 import tempfile
 import shutil
 import yaml
-import requests
 from services import (
     Service, detect_services, is_sub_path, changed_service,
     get_triggers, get_services_by_selector,
     get_changed_services, compare_services, previous_commit,
     pick_first_success_run, list_runs, get_last_green_commit,
-    run_git, GITHUB_API
+    run_git
 )
 
 
@@ -340,6 +339,29 @@ class TestCompareServices(unittest.TestCase):
         mock_run_git.assert_called_once_with('diff', '--name-only', 'HEAD~1')
         mock_get_changed.assert_called_once_with(['file1.py', 'file2.go'], config)
         self.assertEqual(result, [mock_service])
+
+    @patch('services.run_git')
+    @patch('services.detect_services')
+    def test_compare_services_with_dependencies(self, mock_detect_services, mock_run_git):
+        """Test that a changed service causes dependent services to be included."""
+        # Create two mock services: dep1 (changed) and test_service (depends on dep1)
+        mock_dep = MagicMock(path='services/dep1', data={'name': 'dep1', 'dependencies': []})
+        mock_service = MagicMock(path='services/test_service', data={'name': 'test_service', 'dependencies': ['dep1']})
+        # Order doesn't matter much, but include both in detect_services
+        mock_detect_services.return_value = [mock_dep, mock_service]
+
+        # Simulate git diff listing a file under dep1 (so dep1 is changed)
+        mock_run_git.return_value = 'services/dep1/main.go'
+
+        config = {'additional_services': []}
+        result = compare_services('HEAD~1', config)
+
+        mock_run_git.assert_called_once_with('diff', '--name-only', 'HEAD~1')
+        # Expect both the changed service and the dependent service to be returned
+        result_names = [r.data['name'] for r in result]
+        self.assertIn('dep1', result_names)
+        self.assertIn('test_service', result_names)
+        self.assertEqual(len(result_names), 2)
 
 
 class TestPreviousCommit(unittest.TestCase):
