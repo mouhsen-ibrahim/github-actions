@@ -130,7 +130,7 @@ jobs:
   publish:
     needs: [setup, build]
     runs-on: ubuntu-latest
-    #if: ${{ github.ref_name == 'main' }}
+    if: ${{ github.ref_name == 'main' }}
     strategy:
       fail-fast: false
       matrix:
@@ -170,7 +170,7 @@ jobs:
   deploy:
     needs: [publish]
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
+    if: ${{ github.ref_name == 'main' }}
     strategy:
       matrix:
         service: ${{ fromJson(needs.setup.outputs.services) }}
