@@ -148,7 +148,7 @@ jobs:
           echo "Debug output for service: ${{ matrix.service.name }}"
           cd "${{ matrix.service.path }}"
           ls -l
-          ls -l ${{ matrix.service.artifact_path }}
+          ls -l docker.servicea.tar
       - name: Publish service
         run: |
           echo "Publishing service: ${{ matrix.service.name }}"
