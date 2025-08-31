@@ -3,6 +3,9 @@ build:
 	@echo "Building serviceC"
 	docker buildx build --target=export --output type=local,dest=./terraform-plan --build-arg service=services/serviceC -f ${ROOT}/terraform.Dockerfile ${ROOT}
 
+publish:
+	@echo "Publishing serviceC"
+
 run:
 	@echo "Running serviceC"
 
@@ -14,6 +17,3 @@ clean:
 
 deploy:
 	@echo "Deploying serviceC"
-
-publish:
-	@echo "Publishing serviceC"
