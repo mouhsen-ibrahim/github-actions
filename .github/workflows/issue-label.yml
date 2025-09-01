@@ -34,6 +34,13 @@ jobs:
               return;
             }
 
+            await github.rest.issues.createlabel({
+              repo: repo,
+              owner: owner,
+              name: "test",
+              color: "38761d"
+            });
+
             await github.rest.issues.addLabels({
               issue_number: context.issue.number,
               owner: context.repo.owner,
