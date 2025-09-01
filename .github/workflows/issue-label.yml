@@ -1,0 +1,53 @@
+name: Pull Request Maintenance
+on:
+  issues:
+    types:
+      - opened
+
+permissions:
+  issues: write
+
+jobs:
+  new-contributor-labeler:
+    name: Label issues when they are created by a first time contributor
+    permissions:
+      contents: read
+      issues: write
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7
+        with:
+          script: |
+            console.log("Verify that the issue was created by a first time contributor");
+
+            const issue = (ctx.payload as any).issue;
+            const opener = issue?.user;
+            const owner = ctx.repo.owner;
+            const repo = ctx.repo.repo;
+            const issueNumber: number = issue?.number;
+
+            if (!opener?.login) {
+              core.setFailed("Could not determine issue opener login from event payload.");
+              return;
+            }
+
+            const openerLogin: string = opener.login;
+            const contributors = await octokit.paginate(
+            github.repos.listContributors,
+            { owner, repo, per_page: 100 }
+            );
+            const isNewContributor contributors.some(
+              (c) => (c.login ?? "").toLowerCase() === login.toLowerCase()
+            );
+            if (!isNewContributor) {
+              core.info("User is not a first-time contributor under the selected definition. No label added.");
+              return;
+            }
+            await github.issues.createLabel({
+              owner,
+              repo,
+              "label",
+              "BFD4F2",
+              description:
+                "Automatically added to issues opened by first-time contributors"
+            });
