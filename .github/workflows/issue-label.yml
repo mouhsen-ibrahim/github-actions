@@ -20,8 +20,8 @@ jobs:
           script: |
             console.log("Verify that the issue was created by a first time contributor");
             const creator = context.payload.sender.login
-            const owner = ctx.repo.owner;
-            const repo = ctx.repo.repo;
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
             const contributors = await github.paginate(
             github.rest.repos.listContributors,
               { owner, repo, per_page: 100 }
