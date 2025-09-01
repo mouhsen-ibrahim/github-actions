@@ -20,13 +20,13 @@ jobs:
           script: |
             console.log("Verify that the issue was created by a first time contributor");
 
-            const issue = (ctx.payload as any).issue;
-            const opener = issue?.user;
+            const issue = ctx.payload;
+            const opener = issue.user;
             const owner = ctx.repo.owner;
             const repo = ctx.repo.repo;
             const issueNumber: number = issue?.number;
 
-            if (!opener?.login) {
+            if (!opener.login) {
               core.setFailed("Could not determine issue opener login from event payload.");
               return;
             }
