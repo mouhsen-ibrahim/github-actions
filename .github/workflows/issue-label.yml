@@ -19,6 +19,8 @@ jobs:
         with:
           script: |
             console.log("Verify that the issue was created by a first time contributor");
+            const labelName = "test";
+            const labelColor = "38761d";
             const creator = context.payload.sender.login
             const owner = context.repo.owner;
             const repo = context.repo.repo;
@@ -34,21 +36,21 @@ jobs:
               return;
             }
             try {
-              await github.rest.issues.getLabel({ owner, repo, "test" });
-            } catch (e: any) {
+              await github.rest.issues.getLabel({ owner, repo, name: labelName });
+            } catch (e) {
               if (e?.status !== 404) throw e;
-              /*await github.rest.issues.createLabel({
+              await github.rest.issues.createLabel({
                 owner,
                 repo,
-                "test",
-                "38761d",
+                name: labelName,
+                color: labelColor,
                 description: "Automatically added to issues opened by first-time contributors"
-              });*/
+              });
             }
 
             await github.rest.issues.addLabels({
               issue_number: context.issue.number,
               owner: owner,
               repo: repo,
-              labels: ["test"]
+              labels: [labelName]
             })
