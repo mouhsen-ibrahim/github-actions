@@ -33,13 +33,6 @@ jobs:
               console.log("User is already a contributor");
               return;
             }
-
-            await github.rest.issues.createLabel({
-              repo: repo,
-              owner: owner,
-              name: "test",
-              color: "38761d"
-            });
             try {
               await github.rest.issues.getLabel({ owner, repo, "test" });
               return;
@@ -50,14 +43,13 @@ jobs:
                 repo,
                 "test",
                 "38761d",
-                description:
-                  "Automatically added to issues opened by first-time contributors"
+                description: "Automatically added to issues opened by first-time contributors"
               });
             }
 
             await github.rest.issues.addLabels({
               issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
+              owner: owner,
+              repo: repo,
               labels: ["test"]
             })
