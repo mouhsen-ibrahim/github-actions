@@ -34,10 +34,10 @@ jobs:
               return;
             }
             try {
-              //await github.rest.issues.getLabel({ owner, repo, "test" });
+              await github.rest.issues.getLabel({ owner, repo, "test" });
             } catch (e: any) {
-              /*if (e?.status !== 404) throw e;
-              await github.rest.issues.createLabel({
+              if (e?.status !== 404) throw e;
+              /*await github.rest.issues.createLabel({
                 owner,
                 repo,
                 "test",
