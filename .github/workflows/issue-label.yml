@@ -32,7 +32,7 @@ jobs:
               (c) => (c.login ?? "").toLowerCase() === creator.toLowerCase()
             );
             if (isAlreadyContributor) {
-              console.log(`User {creator} is already a contributor`);
+              console.log("User %s is already a contributor", creator);
               return;
             }
             try {
@@ -47,7 +47,7 @@ jobs:
                 description: "Automatically added to issues opened by first-time contributors"
               });
             }
-            console.log(`Adding label {labelName} to issue number {context.issue.number}`)
+            console.log("Adding label %s to issue number %d", labelName, context.issue.number)
 
             await github.rest.issues.addLabels({
               issue_number: context.issue.number,
