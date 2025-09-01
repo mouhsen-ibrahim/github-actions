@@ -34,7 +34,7 @@ jobs:
               return;
             }
 
-            await github.rest.issues.createlabel({
+            await github.rest.issues.createLabel({
               repo: repo,
               owner: owner,
               name: "test",
