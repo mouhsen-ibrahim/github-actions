@@ -19,35 +19,29 @@ jobs:
         with:
           script: |
             console.log("Verify that the issue was created by a first time contributor");
+            // Get a list of all issues created by the PR opener
+            // See: https://octokit.github.io/rest.js/#pagination
+            const creator = context.payload.sender.login
+            const opts = github.rest.issues.listForRepo.endpoint.merge({
+              ...context.issue,
+              creator,
+              state: 'all'
+            })
+            const issues = await github.paginate(opts)
 
-            const issue = ctx.payload;
-            const opener = issue.user;
-            const owner = ctx.repo.owner;
-            const repo = ctx.repo.repo;
-            const issueNumber: number = issue?.number;
+            for (const issue of issues) {
+              if (issue.number === context.issue.number) {
+                continue
+              }
 
-            if (!opener.login) {
-              core.setFailed("Could not determine issue opener login from event payload.");
-              return;
+              if (issue.pull_request) {
+                return // Creator is already a contributor.
+              }
             }
 
-            const openerLogin: string = opener.login;
-            const contributors = await octokit.paginate(
-            github.repos.listContributors,
-            { owner, repo, per_page: 100 }
-            );
-            const isNewContributor contributors.some(
-              (c) => (c.login ?? "").toLowerCase() === login.toLowerCase()
-            );
-            if (!isNewContributor) {
-              core.info("User is not a first-time contributor under the selected definition. No label added.");
-              return;
-            }
-            await github.issues.createLabel({
-              owner,
-              repo,
-              "label",
-              "BFD4F2",
-              description:
-                "Automatically added to issues opened by first-time contributors"
-            });
+            await github.rest.issues.addLabels({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              labels: ["test"]
+            })
