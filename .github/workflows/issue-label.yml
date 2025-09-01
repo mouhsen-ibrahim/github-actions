@@ -19,24 +19,16 @@ jobs:
         with:
           script: |
             console.log("Verify that the issue was created by a first time contributor");
-            // Get a list of all issues created by the PR opener
-            // See: https://octokit.github.io/rest.js/#pagination
             const creator = context.payload.sender.login
-            const opts = github.rest.issues.listForRepo.endpoint.merge({
-              ...context.issue,
-              creator,
-              state: 'all'
-            })
-            const issues = await github.paginate(opts)
-
-            for (const issue of issues) {
-              if (issue.number === context.issue.number) {
-                continue
-              }
-
-              if (issue.pull_request) {
-                return // Creator is already a contributor.
-              }
+            const contributors = await github.paginate(
+            github.rest.repos.listContributors,
+              { owner, repo, per_page: 100 }
+            );
+            let isFirstTime = contributors.some(
+              (c) => (c.login ?? "").toLowerCase() === creator.toLowerCase()
+            );
+            if (!isFirstTime) {
+              console.log("User is already a contributor");
             }
 
             await github.rest.issues.addLabels({
