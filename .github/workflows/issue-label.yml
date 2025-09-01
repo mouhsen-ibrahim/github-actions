@@ -26,6 +26,7 @@ jobs:
             github.rest.repos.listContributors,
               { owner, repo, per_page: 100 }
             );
+            console.log(contributors);
             let isFirstTime = contributors.some(
               (c) => (c.login ?? "").toLowerCase() === creator.toLowerCase()
             );
