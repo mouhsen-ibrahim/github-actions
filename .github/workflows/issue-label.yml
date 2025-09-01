@@ -31,8 +31,10 @@ jobs:
             let isFirstTime = contributors.some(
               (c) => (c.login ?? "").toLowerCase() === creator.toLowerCase()
             );
+            console.log(isFirstTime);
             if (!isFirstTime) {
               console.log("User is already a contributor");
+              return;
             }
 
             await github.rest.issues.addLabels({
