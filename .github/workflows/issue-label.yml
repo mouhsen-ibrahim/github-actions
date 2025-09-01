@@ -31,7 +31,7 @@ jobs:
             let isAlreadyContributor = contributors.some(
               (c) => (c.login ?? "").toLowerCase() === creator.toLowerCase()
             );
-            if (!isAlreadyContributor) {
+            if (isAlreadyContributor) {
               console.log("User is already a contributor");
               return;
             }
