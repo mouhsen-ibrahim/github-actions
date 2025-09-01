@@ -33,7 +33,7 @@ jobs:
               console.log("User is already a contributor");
               return;
             }
-            try {
+            /*try {
               await github.rest.issues.getLabel({ owner, repo, "test" });
               return;
             } catch (e: any) {
@@ -45,7 +45,7 @@ jobs:
                 "38761d",
                 description: "Automatically added to issues opened by first-time contributors"
               });
-            }
+            }*/
 
             await github.rest.issues.addLabels({
               issue_number: context.issue.number,
