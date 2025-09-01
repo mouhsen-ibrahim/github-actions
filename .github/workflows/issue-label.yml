@@ -1,4 +1,4 @@
-name: Pull Request Maintenance
+name: New issues labeler
 on:
   issues:
     types:
@@ -19,7 +19,7 @@ jobs:
         with:
           script: |
             console.log("Verify that the issue was created by a first time contributor");
-            const labelName = "test123";
+            const labelName = "triage/pending-triage";
             const labelColor = "38761d";
             const creator = context.payload.sender.login
             const owner = context.repo.owner;
@@ -32,7 +32,7 @@ jobs:
               (c) => (c.login ?? "").toLowerCase() === creator.toLowerCase()
             );
             if (isAlreadyContributor) {
-              console.log("User is already a contributor");
+              console.log(`User {creator} is already a contributor`);
               return;
             }
             try {
@@ -47,6 +47,7 @@ jobs:
                 description: "Automatically added to issues opened by first-time contributors"
               });
             }
+            console.log(`Adding label {labelName} to issue number {context.issue.number}`)
 
             await github.rest.issues.addLabels({
               issue_number: context.issue.number,
