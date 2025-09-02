@@ -7,7 +7,7 @@ import yaml
 from services import (
     Service, detect_services, is_sub_path, changed_service,
     get_triggers, get_services_by_selector,
-    get_changed_services, compare_services, previous_commit,
+    get_changed_services, compare_services, current_commit,
     pick_first_success_run, list_runs, get_last_green_commit,
     run_git
 )
@@ -89,11 +89,11 @@ class TestRunGit(unittest.TestCase):
         """Test successful git command execution."""
         mock_check_output.return_value = b'commit_hash\n'
 
-        result = run_git('rev-parse', 'HEAD~1')
+        result = run_git('rev-parse', 'HEAD')
 
         self.assertEqual(result, 'commit_hash')
         mock_check_output.assert_called_once_with(
-            ['git', 'rev-parse', 'HEAD~1'],
+            ['git', 'rev-parse', 'HEAD'],
             cwd=None,
             stderr=unittest.mock.ANY
         )
@@ -364,16 +364,16 @@ class TestCompareServices(unittest.TestCase):
         self.assertEqual(len(result_names), 2)
 
 
-class TestPreviousCommit(unittest.TestCase):
+class TestCurrentCommit(unittest.TestCase):
 
     @patch('services.run_git')
-    def test_previous_commit(self, mock_run_git):
+    def test_current_commit(self, mock_run_git):
         """Test getting previous commit hash."""
         mock_run_git.return_value = 'abc123def456'
 
-        result = previous_commit()
+        result = current_commit()
 
-        mock_run_git.assert_called_once_with('rev-parse', 'HEAD~1')
+        mock_run_git.assert_called_once_with('rev-parse', 'HEAD')
         self.assertEqual(result, 'abc123def456')
 
 
@@ -477,7 +477,7 @@ class TestGetLastGreenCommit(unittest.TestCase):
 
     @patch('services.list_runs')
     @patch('services.pick_first_success_run')
-    @patch('services.previous_commit')
+    @patch('services.current_commit')
     def test_get_last_green_commit_found(self, mock_current, mock_pick, mock_list):
         """Test getting last green commit when a successful run is found."""
         mock_list.return_value = [{'id': 1}]
@@ -490,16 +490,16 @@ class TestGetLastGreenCommit(unittest.TestCase):
 
     @patch('services.list_runs')
     @patch('services.pick_first_success_run')
-    @patch('services.previous_commit')
+    @patch('services.current_commit')
     def test_get_last_green_commit_not_found(self, mock_current, mock_pick, mock_list):
         """Test fallback to current commit when no successful run is found."""
         mock_list.return_value = [{'id': 1}]
         mock_pick.return_value = None
-        mock_current.return_value = 'previous_commit_456'
+        mock_current.return_value = 'current_commit_456'
 
         result = get_last_green_commit('owner', 'repo', 'main', 'token')
 
-        self.assertEqual(result, 'previous_commit_456')
+        self.assertEqual(result, 'current_commit_456')
         mock_current.assert_called_once()
 
     @patch('services.list_runs')
