@@ -47,6 +47,7 @@ jobs:
       - run: |
           git log
           git status
+          git rev-parse HEAD
       - name: Set services list
         id: set-services
         env:
