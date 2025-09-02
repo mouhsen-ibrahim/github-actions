@@ -137,6 +137,7 @@ jobs:
           client-id: ${{ secrets.AZURE_CLIENT_ID_APPLY }}
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          auth-type: IDENTITY
       - run: az account show
   publish:
     needs: [setup, build]
