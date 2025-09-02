@@ -127,6 +127,17 @@ jobs:
           else
             echo "No Makefile found for testing in ${{ matrix.service.path }}"
           fi
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID_APPLY }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      - run: az account show
   publish:
     needs: [setup, build]
     runs-on: ubuntu-latest
