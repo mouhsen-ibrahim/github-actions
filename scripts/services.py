@@ -32,12 +32,16 @@ class Service:
 GITHUB_API = "https://api.github.com"
 
 def run_git(*args: str, cwd: Optional[str] = None) -> str:
-    try:
-        out = subprocess.check_output(["git", *args], cwd=cwd, stderr=subprocess.STDOUT)
-        return out.decode().strip()
-    except subprocess.CalledProcessError as e:
-        msg = e.output.decode().strip()
-        raise RuntimeError(f"git {' '.join(args)} failed: {msg}") from e
+    with tracer.start_as_current_span("run_git") as span:
+        span.set_attribute("args", args)
+        span.set_attribute("cwd", cwd)
+        try:
+            out = subprocess.check_output(["git", *args], cwd=cwd, stderr=subprocess.STDOUT)
+            return out.decode().strip()
+        except subprocess.CalledProcessError as e:
+            msg = e.output.decode().strip()
+            span.set_attribute("error", msg)
+            raise RuntimeError(f"git {' '.join(args)} failed: {msg}") from e
 
 
 def detect_services(infra : bool):
