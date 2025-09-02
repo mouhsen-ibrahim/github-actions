@@ -44,6 +44,9 @@ jobs:
         with:
           name: coverage-report
           path: scripts/htmlcov
+      - run: |
+          git log
+          git status
       - name: Set services list
         id: set-services
         env:
