@@ -17,4 +17,4 @@ clean:
 
 deploy:
 	@echo "Deploying serviceC"
-	terraform apply -auto-approve terraform-plan/plan.out
+	cd terraform-plan && terraform apply -auto-approve plan.out
