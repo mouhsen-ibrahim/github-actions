@@ -193,10 +193,6 @@ def main():
             if token is None:
                 raise ValueError("GITHUB_TOKEN environment variable is not set")
             last_green_commit = get_last_green_commit(args.owner, args.repo, args.branch, token, args.workflow)
-            try:
-                run_git("show", last_green_commit)
-            except RuntimeError:
-                last_green_commit=run_git("merge-base",  "HEAD", args.branch)
             print(last_green_commit)
 
 if __name__ == '__main__':

@@ -71,7 +71,10 @@ jobs:
               last_successful_commit=$(opentelemetry-instrument python scripts/services.py --last-green --owner ${{ github.repository_owner }} --repo ${{ github.event.repository.name }} --branch ${{ github.head_ref }})
             fi
             echo "Last successful commit: ${last_successful_commit}"
-            git rev-parse HEAD
+            if ! git cat-file -e "${last_successful_commit}^{commit}" 2>/dev/null; then
+              git fetch main
+              last_successful_commit=$(git merge-base HEAD main)
+            fi
             git diff --name-only ${last_successful_commit}
             services_json=$(opentelemetry-instrument python scripts/services.py --cmp ${last_successful_commit})
             infra_json=$(opentelemetry-instrument python scripts/services.py --cmp ${last_successful_commit} --infra)
