@@ -196,7 +196,7 @@ def main():
             try:
                 run_git("show", last_green_commit)
             except RuntimeError:
-                last_green_commit=run_git("merge-base",  "HEAD", "main")
+                last_green_commit=run_git("merge-base",  "HEAD", args.branch)
             print(last_green_commit)
 
 if __name__ == '__main__':
