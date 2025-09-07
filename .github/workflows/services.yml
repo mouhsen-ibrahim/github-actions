@@ -82,7 +82,7 @@ jobs:
             echo "infra=${infra_json}" >> $GITHUB_OUTPUT
           fi
 
-  build:
+  build_services:
     needs: setup
     container:
       image: ${{ matrix.service.image }}
@@ -192,8 +192,8 @@ jobs:
           else
             echo "No Makefile found for testing in ${{ matrix.service.path }}"
           fi
-  publish:
-    needs: [setup, build]
+  publish_services:
+    needs: [setup, build_services]
     runs-on: ubuntu-latest
     if: ${{ github.ref_name == 'main' }}
     strategy:
@@ -231,7 +231,7 @@ jobs:
           else
             echo "No Makefile found for publishing in ${{ matrix.service.path }}"
           fi
-  deploy-infra:
+  deploy_infra:
     needs: [setup, build_infra]
     runs-on: ubuntu-latest
     #if: ${{ github.ref_name == 'main' }}
@@ -255,8 +255,8 @@ jobs:
           else
             echo "No Makefile found for deployment in ${{ matrix.service.path }}"
           fi
-  deploy-services:
-    needs: [setup]
+  deploy_services:
+    needs: [setup, publish_services]
     runs-on: ubuntu-latest
     #if: ${{ github.ref_name == 'main' }}
     strategy:
