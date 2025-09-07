@@ -192,7 +192,7 @@ jobs:
             echo "No Makefile found for publishing in ${{ matrix.service.path }}"
           fi
   deploy-infra:
-    needs: [setup]
+    needs: [setup, build]
     runs-on: ubuntu-latest
     #if: ${{ github.ref_name == 'main' }}
     strategy:
