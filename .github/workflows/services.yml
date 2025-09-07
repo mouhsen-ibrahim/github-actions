@@ -71,10 +71,9 @@ jobs:
               git fetch origin main
               last_successful_commit=$(git merge-base HEAD origin/main)
             fi
-            git diff --name-only ${last_successful_commit}
             services_all=$(opentelemetry-instrument python scripts/services.py --cmp ${last_successful_commit})
-            services_json=${services_all["services"]}
-            infra_json=${services_all["infra"]}
+            services_json=$(echo ${all_services} | jq .services)
+            infra_json=$(echo ${all_services} | jq .infra)
             # Debug output
             echo "Generated services JSON: $services_json"
             echo "Generated infra JSON: $infra_json"
