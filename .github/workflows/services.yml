@@ -72,8 +72,8 @@ jobs:
               last_successful_commit=$(git merge-base HEAD origin/main)
             fi
             services_all=$(opentelemetry-instrument python scripts/services.py --cmp ${last_successful_commit})
-            services_json=$(echo "$services_all" | jq '.services')
-            infra_json=$(echo "$services_all" | jq '.infra')
+            services_json=$(echo "$services_all" | jq -c '.services')
+            infra_json=$(echo "$services_all" | jq -c '.infra')
             # Debug output
             echo "Generated services JSON: $services_json"
             echo "Generated infra JSON: $infra_json"
