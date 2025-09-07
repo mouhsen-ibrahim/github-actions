@@ -1,7 +1,7 @@
 # This script is used to detect all services in the repository
 
 import argparse
-import os, yaml
+import os, yaml, json
 from typing_extensions import List
 import subprocess, requests
 from typing import Optional
@@ -28,6 +28,8 @@ class Service:
 
     def __hash__(self):
         return hash(self.path)
+    def to_dict(self):
+        return self.data
 
 GITHUB_API = "https://api.github.com"
 
@@ -44,18 +46,13 @@ def run_git(*args: str, cwd: Optional[str] = None) -> str:
             raise RuntimeError(f"git {' '.join(args)} failed: {msg}") from e
 
 
-def detect_services(infra : bool):
+def detect_services():
     with tracer.start_as_current_span("detect_services"):
         services = []
         for root, dirs, files in os.walk('.'):
             for file in files:
                 if file == "Buildfile.yaml":
-                    service = Service(root)
-                    if infra:
-                        if service.data.get("kind") == "terraform":
-                            services.append(service)
-                    else:
-                        services.append(service)
+                    services.append(Service(root))
 
         return services
 
@@ -86,8 +83,8 @@ def get_services_by_selector(selector, services) -> List[Service]:
                     ret.append(service)
         return ret
 
-def get_changed_services(changes : List[str], infra : bool, config) -> List[Service]:
-    services = detect_services(infra)
+def get_changed_services(changes : List[str], config) -> dict[str, List[Service]]:
+    services = detect_services()
     additional_services = []
     for c in config.get("additional_services", []):
         changed_files = get_triggers(c.get("trigger", {}))
@@ -102,13 +99,22 @@ def get_changed_services(changes : List[str], infra : bool, config) -> List[Serv
 
     # Use dict.fromkeys() to preserve order while removing duplicates
     all_services = changed_services + additional_services
-    return list(dict.fromkeys(all_services))
+    infra_services = [service for service in all_services if service.data.get("kind") == "terraform"]
+    rest_services = [service for service in all_services if service.data.get("kind") != "terraform"]
+    return {
+        "services": rest_services,
+        "infra": infra_services,
+    }
 
-def compare_services(cmp : str, infra : bool, config):
+def compare_services(cmp : str, config):
     with tracer.start_as_current_span("compare_services") as compare_services:
         changes = run_git("diff", "--name-only", cmp)
         compare_services.set_attribute("cmp", cmp)
-        return get_changed_services(changes.split("\n"), infra, config)
+        changed_service = get_changed_services(changes.split("\n"), config)
+        return {
+            "services": [service.to_dict() for service in changed_service["services"]],
+            "infra": [service.to_dict() for service in changed_service["infra"]],
+        }
 
 def current_commit() -> str:
     return run_git("rev-parse", "HEAD")
@@ -162,7 +168,6 @@ def main():
         parser = argparse.ArgumentParser(description='Detect services in the repository')
         parser.add_argument('--all', action='store_true', help='Find all services')
         parser.add_argument("--cmp", type=str, help="Compare with a git commit")
-        parser.add_argument('--infra', action='store_true', help='Find only infrastructure services')
         parser.add_argument("--config", type=str, help="Configuration file", default="services.yaml")
         parser.add_argument("--last-green", action="store_true", help="Return changed services since the last green build")
         parser.add_argument("--branch", type=str, help="Branch to find last green commit")
@@ -173,14 +178,12 @@ def main():
 
         if args.all:
             span.set_attribute("all", True)
-            span.set_attribute("infra", args.infra)
-            print(detect_services(args.infra))
+            print(detect_services())
         if args.cmp:
             span.set_attribute("cmp", args.cmp)
-            span.set_attribute("infra", args.infra)
             with open(args.config, "r") as f:
                 config = yaml.safe_load(f)
-                print(compare_services(args.cmp, args.infra, config))
+                print(json.dumps(compare_services(args.cmp, config)))
         if args.last_green:
             span.set_attribute("last_green", True)
             if args.branch is None or args.repo is None or args.owner is None:
