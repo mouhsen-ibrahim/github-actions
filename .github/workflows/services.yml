@@ -201,7 +201,11 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-
+      - uses: actions/download-artifact@v5
+        if: ${{ matrix.service.artifact_load != '' }}
+        with:
+          name: ${{ matrix.service.artifact_load }}
+          path: "${{ matrix.service.artifact_path }}"
       - name: Deploy service
         run: |
           echo "Deploying service: ${{ matrix.service.name }}"
