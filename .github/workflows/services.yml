@@ -72,8 +72,8 @@ jobs:
               last_successful_commit=$(git merge-base HEAD origin/main)
             fi
             services_all=$(opentelemetry-instrument python scripts/services.py --cmp ${last_successful_commit})
-            services_json=$(echo ${all_services} | jq .services)
-            infra_json=$(echo ${all_services} | jq .infra)
+            services_json=$(echo "$services_all" | jq '.services')
+            infra_json=$(echo "$services_all" | jq '.infra')
             # Debug output
             echo "Generated services JSON: $services_json"
             echo "Generated infra JSON: $infra_json"
@@ -192,17 +192,6 @@ jobs:
           else
             echo "No Makefile found for testing in ${{ matrix.service.path }}"
           fi
-  test:
-    runs-on: ubuntu-latest
-    steps:
-      - run: az version
-      - name: Azure login
-        uses: azure/login@v2
-        with:
-          client-id: ${{ secrets.AZURE_CLIENT_ID }}
-          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-      - run: az account show
   publish:
     needs: [setup, build]
     runs-on: ubuntu-latest
