@@ -102,8 +102,8 @@ def get_changed_services(changes : List[str], config) -> dict[str, List[Service]
     infra_services = [service for service in all_services if service.data.get("kind") == "terraform"]
     rest_services = [service for service in all_services if service.data.get("kind") != "terraform"]
     return {
-        "services": rest_services,
-        "infra": infra_services,
+        "services": list(dict.fromkeys(rest_services)),
+        "infra": list(dict.fromkeys(infra_services)),
     }
 
 def compare_services(cmp : str, config):
