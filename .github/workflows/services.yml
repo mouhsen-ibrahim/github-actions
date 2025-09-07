@@ -73,7 +73,7 @@ jobs:
             echo "Last successful commit: ${last_successful_commit}"
             if ! git cat-file -e "${last_successful_commit}^{commit}" 2>/dev/null; then
               git fetch origin main
-              last_successful_commit=$(git merge-base HEAD main)
+              last_successful_commit=$(git merge-base HEAD origin/main)
             fi
             git diff --name-only ${last_successful_commit}
             services_json=$(opentelemetry-instrument python scripts/services.py --cmp ${last_successful_commit})
