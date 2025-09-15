@@ -251,7 +251,7 @@ jobs:
           name: ${{ matrix.service.artifact_load }}
       - name: untar artifact
         if: ${{ matrix.service.artifact_load != '' }}
-        run: tar --no-same-owner -xzf ${{ matrix.service.artifact_load }}.tar -C ${{ matrix.service.artifact_path }}
+        run: mkdir -p ${{ matrix.service.artifact_path }} && tar --no-same-owner -xzf ${{ matrix.service.artifact_load }}.tar -C ${{ matrix.service.artifact_path }}
       - name: Deploy service
         run: |
           echo "Deploying service: ${{ matrix.service.name }}"
