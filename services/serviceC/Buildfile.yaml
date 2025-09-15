@@ -4,6 +4,7 @@ version: 1.5.2
 team: sre
 kind: terraform
 artifact: terraform_plan
+artifact_load: terraform_plan
 artifact_path: services/serviceC/terraform-plan
 build:
   dockerfile: Dockerfile

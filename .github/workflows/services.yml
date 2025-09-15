@@ -26,11 +26,13 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       services: ${{ steps.set-services.outputs.services }}
+      infra: ${{ steps.set-services.outputs.infra }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v5
         with:
           fetch-depth: 0
+          ref: ${{ github.ref }}
       - name: run services tests
         if: ${{ github.event_name != 'workflow_dispatch' }}
         run: cd scripts && pip install -r requirements.txt && make test
@@ -65,14 +67,22 @@ jobs:
               last_successful_commit=$(opentelemetry-instrument python scripts/services.py --last-green --owner ${{ github.repository_owner }} --repo ${{ github.event.repository.name }} --branch ${{ github.head_ref }})
             fi
             echo "Last successful commit: ${last_successful_commit}"
-            services_json=$(opentelemetry-instrument python scripts/services.py --cmp ${last_successful_commit})
+            if ! git cat-file -e "${last_successful_commit}^{commit}" 2>/dev/null; then
+              git fetch origin main
+              last_successful_commit=$(git merge-base HEAD origin/main)
+            fi
+            services_all=$(opentelemetry-instrument python scripts/services.py --cmp ${last_successful_commit})
+            services_json=$(echo "$services_all" | jq -c '.services')
+            infra_json=$(echo "$services_all" | jq -c '.infra')
             # Debug output
             echo "Generated services JSON: $services_json"
+            echo "Generated infra JSON: $infra_json"
 
             echo "services=${services_json}" >> $GITHUB_OUTPUT
+            echo "infra=${infra_json}" >> $GITHUB_OUTPUT
           fi
 
-  build:
+  build_services:
     needs: setup
     container:
       image: ${{ matrix.service.image }}
@@ -115,8 +125,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.service.artifact }}
-          path: "${{ matrix.service.artifact_path }}"
-          include-hidden-files: true
+          path: ${{ matrix.service.artifact_path }}
 
       - name: Test service
         run: |
@@ -127,19 +136,65 @@ jobs:
           else
             echo "No Makefile found for testing in ${{ matrix.service.path }}"
           fi
-  test:
+  build_infra:
+    needs: setup
+    container:
+      image: ${{ matrix.service.image }}
     runs-on: ubuntu-latest
+    if: ${{ needs.setup.outputs.infra != '[]' }}
+    strategy:
+      fail-fast: false
+      matrix:
+        service: ${{ fromJson(needs.setup.outputs.infra) }}
     steps:
-      - run: az version
-      - name: Azure login
-        uses: azure/login@v2
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      - name: get docker registry
+        id: get_docker_registry
+        run: |
+          echo "Getting docker registry"
+          echo "DOCKER_REGISTRY=$(cat Makefile.variables | grep -oP 'DOCKER_REGISTRY=\K[^ ]+')" >> $GITHUB_OUTPUT
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
         with:
-          client-id: ${{ secrets.AZURE_CLIENT_ID }}
-          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-      - run: az account show
-  publish:
-    needs: [setup, build]
+          registry: ${{ steps.get_docker_registry.outputs.DOCKER_REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build service
+        run: |
+          echo "Building service: ${{ matrix.service.name }}"
+          echo "Service path: ${{ matrix.service.path }}"
+          cd "${{ matrix.service.path }}"
+          if [ -f "Makefile" ]; then
+            make build
+          else
+            echo "No Makefile found in ${{ matrix.service.path }}"
+          fi
+      - name: Create tarball for artifacts
+        if: ${{ matrix.service.artifact != '' }}
+        run: tar -czf ${{ matrix.service.artifact }}.tar -C ${{ matrix.service.artifact_path }} .
+      - name: Save service artifacts
+        if: ${{ matrix.service.artifact != '' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.service.artifact }}
+          path: ${{ matrix.service.artifact }}.tar
+
+      - name: Test service
+        run: |
+          echo "Testing service: ${{ matrix.service.name }}"
+          cd "${{ matrix.service.path }}"
+          if [ -f "Makefile" ]; then
+            make test
+          else
+            echo "No Makefile found for testing in ${{ matrix.service.path }}"
+          fi
+  publish_services:
+    needs: [setup, build_services]
     runs-on: ubuntu-latest
     if: ${{ github.ref_name == 'main' }}
     strategy:
@@ -177,9 +232,34 @@ jobs:
           else
             echo "No Makefile found for publishing in ${{ matrix.service.path }}"
           fi
-
-  deploy:
-    needs: [publish, setup]
+  deploy_infra:
+    needs: [setup, build_infra]
+    runs-on: ubuntu-latest
+    if: ${{ github.ref_name == 'main' }}
+    strategy:
+      matrix:
+        service: ${{ fromJson(needs.setup.outputs.infra) }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - uses: actions/download-artifact@v5
+        if: ${{ matrix.service.artifact_load != '' }}
+        with:
+          name: ${{ matrix.service.artifact_load }}
+      - name: untar artifact
+        if: ${{ matrix.service.artifact_load != '' }}
+        run: mkdir -p ${{ matrix.service.artifact_path }} && tar --no-same-owner -xzf ${{ matrix.service.artifact_load }}.tar -C ${{ matrix.service.artifact_path }}
+      - name: Deploy service
+        run: |
+          echo "Deploying service: ${{ matrix.service.name }}"
+          cd "${{ matrix.service.path }}"
+          if [ -f "Makefile" ]; then
+            make deploy
+          else
+            echo "No Makefile found for deployment in ${{ matrix.service.path }}"
+          fi
+  deploy_services:
+    needs: [setup, publish_services]
     runs-on: ubuntu-latest
     if: ${{ github.ref_name == 'main' }}
     strategy:

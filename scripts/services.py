@@ -1,7 +1,7 @@
 # This script is used to detect all services in the repository
 
 import argparse
-import os, yaml
+import os, yaml, json
 from typing_extensions import List
 import subprocess, requests
 from typing import Optional
@@ -28,16 +28,22 @@ class Service:
 
     def __hash__(self):
         return hash(self.path)
+    def to_dict(self):
+        return self.data
 
 GITHUB_API = "https://api.github.com"
 
 def run_git(*args: str, cwd: Optional[str] = None) -> str:
-    try:
-        out = subprocess.check_output(["git", *args], cwd=cwd, stderr=subprocess.STDOUT)
-        return out.decode().strip()
-    except subprocess.CalledProcessError as e:
-        msg = e.output.decode().strip()
-        raise RuntimeError(f"git {' '.join(args)} failed: {msg}") from e
+    with tracer.start_as_current_span("run_git") as span:
+        span.set_attribute("args", args)
+        span.set_attribute("cwd", cwd)
+        try:
+            out = subprocess.check_output(["git", *args], cwd=cwd, stderr=subprocess.STDOUT)
+            return out.decode().strip()
+        except subprocess.CalledProcessError as e:
+            msg = e.output.decode().strip()
+            span.set_attribute("error", msg)
+            raise RuntimeError(f"git {' '.join(args)} failed: {msg}") from e
 
 
 def detect_services():
@@ -47,6 +53,7 @@ def detect_services():
             for file in files:
                 if file == "Buildfile.yaml":
                     services.append(Service(root))
+
         return services
 
 def is_sub_path(path1 : str, path2 : str) -> bool:
@@ -76,7 +83,7 @@ def get_services_by_selector(selector, services) -> List[Service]:
                     ret.append(service)
         return ret
 
-def get_changed_services(changes : List[str], config) -> List[Service]:
+def get_changed_services(changes : List[str], config) -> dict[str, List[Service]]:
     services = detect_services()
     additional_services = []
     for c in config.get("additional_services", []):
@@ -92,16 +99,25 @@ def get_changed_services(changes : List[str], config) -> List[Service]:
 
     # Use dict.fromkeys() to preserve order while removing duplicates
     all_services = changed_services + additional_services
-    return list(dict.fromkeys(all_services))
+    infra_services = [service for service in all_services if service.data.get("kind") == "terraform"]
+    rest_services = [service for service in all_services if service.data.get("kind") != "terraform"]
+    return {
+        "services": list(dict.fromkeys(rest_services)),
+        "infra": list(dict.fromkeys(infra_services)),
+    }
 
 def compare_services(cmp : str, config):
     with tracer.start_as_current_span("compare_services") as compare_services:
         changes = run_git("diff", "--name-only", cmp)
         compare_services.set_attribute("cmp", cmp)
-        return get_changed_services(changes.split("\n"), config)
+        changed_service = get_changed_services(changes.split("\n"), config)
+        return {
+            "services": [service.to_dict() for service in changed_service["services"]],
+            "infra": [service.to_dict() for service in changed_service["infra"]],
+        }
 
-def previous_commit() -> str:
-    return run_git("rev-parse", "HEAD~1")
+def current_commit() -> str:
+    return run_git("rev-parse", "HEAD")
 
 def pick_first_success_run(runs: list) -> Optional[dict]:
     for r in runs:
@@ -143,7 +159,7 @@ def get_last_green_commit(owner: str, repo: str, branch: str, token: str,
     runs = list_runs(owner, repo, branch, token, workflow_id=workflow_id, workflow_ref=workflow)
     run = pick_first_success_run(runs)
     if not run:
-        return previous_commit()
+        return current_commit()
     return run.get("head_sha")
 
 
@@ -167,7 +183,7 @@ def main():
             span.set_attribute("cmp", args.cmp)
             with open(args.config, "r") as f:
                 config = yaml.safe_load(f)
-                print(compare_services(args.cmp, config))
+                print(json.dumps(compare_services(args.cmp, config)))
         if args.last_green:
             span.set_attribute("last_green", True)
             if args.branch is None or args.repo is None or args.owner is None:
