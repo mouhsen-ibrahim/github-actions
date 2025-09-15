@@ -120,15 +120,12 @@ jobs:
           else
             echo "No Makefile found in ${{ matrix.service.path }}"
           fi
-      - name: Create tarball for artifacts
-        if: ${{ matrix.service.artifact != '' }}
-        run: tar -czf ${{ matrix.service.artifact }}.tar -C ${{ matrix.service.artifact_path }} .
       - name: Save service artifacts
         if: ${{ matrix.service.artifact != '' }}
         uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.service.artifact }}
-          path: ${{ matrix.service.artifact }}.tar
+          path: ${{ matrix.service.artifact_path }}
 
       - name: Test service
         run: |
