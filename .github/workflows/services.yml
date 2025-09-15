@@ -120,13 +120,15 @@ jobs:
           else
             echo "No Makefile found in ${{ matrix.service.path }}"
           fi
+      - name: Create tarball for artifacts
+        if: ${{ matrix.service.artifact != '' }}
+        run: tar -czf ${{ matrix.service.artifact }}.tar -C ${{ matrix.service.artifact_path }} .
       - name: Save service artifacts
         if: ${{ matrix.service.artifact != '' }}
         uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.service.artifact }}
-          path: "${{ matrix.service.artifact_path }}"
-          include-hidden-files: true
+          path: ${{ matrix.service.artifact }}.tar
 
       - name: Test service
         run: |
@@ -175,13 +177,15 @@ jobs:
           else
             echo "No Makefile found in ${{ matrix.service.path }}"
           fi
+      - name: Create tarball for artifacts
+        if: ${{ matrix.service.artifact != '' }}
+        run: tar -czf ${{ matrix.service.artifact }}.tar -C ${{ matrix.service.artifact_path }} .
       - name: Save service artifacts
         if: ${{ matrix.service.artifact != '' }}
         uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.service.artifact }}
-          path: "${{ matrix.service.artifact_path }}"
-          include-hidden-files: true
+          path: ${{ matrix.service.artifact }}.tar
 
       - name: Test service
         run: |
@@ -246,6 +250,9 @@ jobs:
         with:
           name: ${{ matrix.service.artifact_load }}
           path: "${{ matrix.service.artifact_path }}"
+      - name: untar artifact
+        if: ${{ matrix.service.artifact_load != '' }}
+        run: tar --no-name-owner -xzf ${{ matrix.service.artifact_load }} -C ${{ matrix.service.artifact_path }}
       - name: Deploy service
         run: |
           echo "Deploying service: ${{ matrix.service.name }}"
