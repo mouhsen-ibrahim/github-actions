@@ -17,4 +17,4 @@ clean:
 
 deploy:
 	@echo "Deploying serviceC"
-	docker run --rm -v ${PWD}/terraform-plan:/terraform -w /terraform hashicorp/terraform:1.13.1 apply -auto-approve /terraform/plan.out
+	#docker run --rm -v ${PWD}/terraform-plan:/terraform -w /terraform hashicorp/terraform:1.13.1 apply -auto-approve /terraform/plan.out
