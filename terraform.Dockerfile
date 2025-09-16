@@ -20,6 +20,13 @@ WORKDIR /workspace
 ARG service
 COPY ${service} /workspace
 
+ARG ARM_CLIENT_ID
+ARG ARM_TENANT_ID
+ARG ARM_SUBSCRIPTION_ID
+ARG ARM_USE_OIDC
+ARG ACTIONS_ID_TOKEN_REQUEST_URL
+ARG ACTIONS_ID_TOKEN_REQUEST_TOKEN
+
 RUN sh -c "\
     mkdir /out && \
     terraform init -input=false && \
