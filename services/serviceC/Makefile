@@ -2,6 +2,7 @@ include ../../Makefile.variables
 build:
 	@echo "Building serviceC"
 	echo ${ARM_SUBSCRIPTION_ID}
+	terraform init -input=false
 	docker buildx build --target=export --output type=local,dest=./terraform-plan --build-arg service=services/serviceC -f ${ROOT}/terraform.Dockerfile ${ROOT}
 
 publish:
