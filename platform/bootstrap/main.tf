@@ -69,6 +69,15 @@ resource "azuread_application_federated_identity_credential" "gh" {
   subject        = local.oidc_subject
 }
 
+resource "azuread_application_federated_identity_credential" "gh_main" {
+  application_id = "/applications/${azuread_application_registration.gh.object_id}"
+  display_name   = "github-main-${var.github_repository}"
+  description    = "OIDC trust for GitHub Actions on main"
+  audiences      = ["api://AzureADTokenExchange"]
+  issuer         = "https://token.actions.githubusercontent.com"
+  subject        = "repo:${var.github_owner}/${var.github_repository}:ref:refs/heads/main"
+}
+
 # ---- RBAC assignment (least privilege!) ----
 resource "azurerm_role_assignment" "gh" {
   scope                = var.rbac_scope != "" ? var.rbac_scope : "/subscriptions/${data.azurerm_client_config.current.subscription_id}"
