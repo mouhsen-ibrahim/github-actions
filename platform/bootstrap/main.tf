@@ -80,6 +80,13 @@ resource "azurerm_role_assignment" "gh" {
   skip_service_principal_aad_check = true
 }
 
+resource "azurerm_role_assignment" "terraform_sp_storage_blob" {
+  scope                = var.rbac_scope != "" ? var.rbac_scope : "/subscriptions/${data.azurerm_client_config.current.subscription_id}"
+  role_definition_name = "Storage Blob Data Contributor"
+  principal_id         = azuread_service_principal.gh.object_id
+  principal_type       = "ServicePrincipal"
+}
+
 # ---- GitHub Actions secrets ----
 resource "github_actions_secret" "azure_client_id" {
   repository      = var.github_repository
