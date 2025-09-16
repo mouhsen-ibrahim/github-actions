@@ -180,6 +180,7 @@ jobs:
           echo "Service path: ${{ matrix.service.path }}"
           cd "${{ matrix.service.path }}"
           if [ -f "Makefile" ]; then
+            echo ${ARM_SUBSCRIPTION_ID}
             make build
           else
             echo "No Makefile found in ${{ matrix.service.path }}"
