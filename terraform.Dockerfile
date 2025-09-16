@@ -20,14 +20,9 @@ WORKDIR /workspace
 ARG service
 COPY ${service} /workspace
 
-ARG ARM_CLIENT_ID
-ARG ARM_TENANT_ID
-ARG ARM_SUBSCRIPTION_ID
-ARG ARM_USE_OIDC
-ARG ACTIONS_ID_TOKEN_REQUEST_URL
-ARG ACTIONS_ID_TOKEN_REQUEST_TOKEN
-
-RUN sh -c "\
+RUN --mount=type=bind,from=ext,source=.,target=/azcfg,readonly sh -c "\
+    mkdir -p /tmp/azcfg && cp -a /azcfg/* /tmp/azcfg/ && \
+    export AZURE_CONFIG_DIR=/tmp/azcfg && \
     mkdir /out && \
     terraform init -input=false && \
     terraform validate && \
