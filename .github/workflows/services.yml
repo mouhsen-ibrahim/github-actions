@@ -180,17 +180,9 @@ jobs:
           create_credentials_file: true
           export_environment_variables: true
           token_format: access_token
-      - uses: hashicorp/setup-terraform@v3
-        with:
-          terraform_version: "1.13.1"
-      - name: Verify GCP Authentication
-        if: ${{ matrix.service.authentication.gcp == 'enabled' }}
-        run: |
-          echo "GAC=$GOOGLE_APPLICATION_CREDENTIALS"
-          test -f "$GOOGLE_APPLICATION_CREDENTIALS" && echo "ADC file exists."
-          gcloud auth list
-          gcloud config get-value project
-          gcloud projects describe ${{ secrets.GCP_PROJECT_ID }}
+      #- uses: hashicorp/setup-terraform@v3
+      #  with:
+      #    terraform_version: "1.13.1"
       - name: Build service
         env:
           ARM_USE_OIDC: true
@@ -298,14 +290,6 @@ jobs:
           create_credentials_file: true
           export_environment_variables: true
           token_format: access_token
-      - name: Setup Google Cloud SDK
-        if: ${{ matrix.service.authentication.gcp == 'enabled' }}
-        uses: google-github-actions/setup-gcloud@v2
-        with:
-          project_id: ${{ secrets.GCP_PROJECT_ID }}
-      - uses: hashicorp/setup-terraform@v3
-        with:
-          terraform_version: "1.13.1"
       - name: Deploy service
         env:
           ARM_USE_OIDC: true
