@@ -183,7 +183,10 @@ jobs:
         with:
           terraform_version: "1.13.1"
       - uses: google-github-actions/setup-gcloud@v2
-      - run: gcloud auth list && gcloud projects describe github-actions-472416
+      - run: |
+          echo "GAC=$GOOGLE_APPLICATION_CREDENTIALS"
+          test -f "$GOOGLE_APPLICATION_CREDENTIALS" && echo "ADC file exists."
+          gcloud auth list && gcloud projects describe github-actions-472416
       - name: Build service
         env:
           ARM_USE_OIDC: true
