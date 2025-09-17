@@ -1,6 +1,8 @@
 include ../../Makefile.variables
 build:
 	@echo "Building serviceC"
+	terraform init
+	terraform plan -input=false
 	docker buildx build --build-context ext=${HOME}/.azure --target=export --output type=local,dest=./terraform-plan --build-arg service=services/serviceC -f ${ROOT}/terraform.Dockerfile ${ROOT}
 
 publish:

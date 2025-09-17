@@ -177,6 +177,9 @@ jobs:
           project_id: ${{ secrets.GCP_PROJECT_ID }}
           workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
           service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.13.1"
       - name: Build service
         env:
           ARM_USE_OIDC: true
