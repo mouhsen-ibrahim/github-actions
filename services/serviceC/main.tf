@@ -5,6 +5,10 @@ terraform {
       source  = "hashicorp/random"
       version = "~> 3.6"
     }
+    google = {
+      source = "hashicorp/google"
+      version = "7.3.0"
+    }
   }
   backend "azurerm" {
     use_azuread_auth     = true
@@ -16,6 +20,10 @@ terraform {
   # test
 }
 
+provider "google" {
+  project = var.project_id
+}
+
 resource "random_string" "sample" {
   length  = 30
   upper   = true
@@ -24,7 +32,15 @@ resource "random_string" "sample" {
   special = false
 }
 
+data "google_project" "this" {}
+
 output "random_string_value" {
   description = "The generated random string"
   value       = random_string.sample.result
+}
+
+variable "project_id" {
+  description = "GCP project ID"
+  type        = string
+  default = "github-actions-472416"
 }

@@ -22,7 +22,15 @@ terraform {
       source  = "integrations/github"
       version = "= 6.6.0"
     }
+    google = {
+      source = "hashicorp/google"
+      version = "7.3.0"
+    }
   }
+}
+
+provider "google" {
+  project = var.project_id
 }
 
 provider "azurerm" {
