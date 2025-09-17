@@ -45,3 +45,37 @@ variable "role_definition_name" {
   type        = string
   default     = "Contributor"
 }
+
+variable "project_id" {
+  description = "GCP project ID"
+  type        = string
+  default = "github-actions-472416"
+}
+
+variable "pool_id" {
+  description = "Workload Identity Pool ID"
+  type        = string
+  default     = "gh-actions-pool"
+}
+
+variable "provider_id" {
+  description = "Workload Identity Provider ID"
+  type        = string
+  default     = "github-oidc"
+}
+
+variable "sa_id" {
+  description = "Service account ID (short name)"
+  type        = string
+  default     = "gh-actions-deployer"
+}
+
+variable "sa_roles" {
+  description = "Project-level roles to grant the service account"
+  type        = list(string)
+  default     = [
+    "roles/artifactregistry.writer",
+    "roles/iam.serviceAccountUser",
+    "roles/editor",
+  ]
+}

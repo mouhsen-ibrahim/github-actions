@@ -6,6 +6,9 @@ kind: terraform
 artifact: terraform_plan
 artifact_load: terraform_plan
 artifact_path: services/serviceC/terraform-plan
+authentication:
+  azure: enabled
+  gcp: enabled
 build:
   dockerfile: Dockerfile
   context: .
