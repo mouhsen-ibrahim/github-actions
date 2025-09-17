@@ -180,6 +180,8 @@ jobs:
       - uses: hashicorp/setup-terraform@v3
         with:
           terraform_version: "1.13.1"
+      - uses: google-github-actions/setup-gcloud@v2
+      - run: gcloud auth list
       - name: Build service
         env:
           ARM_USE_OIDC: true
