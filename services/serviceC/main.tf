@@ -17,7 +17,6 @@ terraform {
     container_name       = "services"
     key                  = "serviceC"
   }
-  # test
 }
 
 provider "google" {
@@ -33,6 +32,12 @@ resource "random_string" "sample" {
 }
 
 data "google_project" "this" {}
+
+resource "google_compute_network" "test" {
+  auto_create_subnetworks = false
+  description = "A test network created via terraorm"
+  name = "net-test"
+}
 
 output "random_string_value" {
   description = "The generated random string"
