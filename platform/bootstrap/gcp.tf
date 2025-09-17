@@ -100,7 +100,7 @@ output "project_number" {
 resource "github_actions_secret" "gcp_project_id" {
   repository      = var.github_repository
   secret_name     = "GCP_PROJECT_ID"
-  plaintext_value = data.google_project.this.id
+  plaintext_value = data.google_project.this.project_id
 }
 
 resource "github_actions_secret" "gcp_workload_identity_provider" {
