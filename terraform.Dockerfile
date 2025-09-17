@@ -20,10 +20,11 @@ WORKDIR /workspace
 ARG service
 COPY ${service} /workspace
 
-RUN --mount=type=bind,from=ext,source=.,target=/azcfg,readonly sh -c "\
+RUN --mount=type=bind,from=ext,source=.,target=/azcfg,readonly --mount=type=bind,from=gcloud,source=.,target=/gcloudcfg,readonly sh -c "\
     mkdir -p /tmp/azcfg && cp -a /azcfg/* /tmp/azcfg/ && \
     export AZURE_CONFIG_DIR=/tmp/azcfg && \
     mkdir /out && \
+    export GOOGLE_APPLICATION_CREDENTIALS=/gcloudcfg \
     terraform init -input=false && \
     terraform validate && \
     terraform plan -input=false -out=/out/plan.out && \
