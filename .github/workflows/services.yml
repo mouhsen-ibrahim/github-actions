@@ -179,14 +179,23 @@ jobs:
           service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
           create_credentials_file: true
           export_environment_variables: true
+          token_format: access_token
+      - name: Setup Google Cloud SDK
+        if: ${{ matrix.service.authentication.gcp == 'enabled' }}
+        uses: google-github-actions/setup-gcloud@v2
+        with:
+          project_id: ${{ secrets.GCP_PROJECT_ID }}
       - uses: hashicorp/setup-terraform@v3
         with:
           terraform_version: "1.13.1"
-      - uses: google-github-actions/setup-gcloud@v2
-      - run: |
+      - name: Verify GCP Authentication
+        if: ${{ matrix.service.authentication.gcp == 'enabled' }}
+        run: |
           echo "GAC=$GOOGLE_APPLICATION_CREDENTIALS"
           test -f "$GOOGLE_APPLICATION_CREDENTIALS" && echo "ADC file exists."
-          gcloud auth list && gcloud projects describe github-actions-472416
+          gcloud auth list
+          gcloud config get-value project
+          gcloud projects describe ${{ secrets.GCP_PROJECT_ID }}
       - name: Build service
         env:
           ARM_USE_OIDC: true
@@ -284,6 +293,24 @@ jobs:
           client-id: ${{ secrets.AZURE_CLIENT_ID }}
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      - name: Login to GCP
+        if: ${{ matrix.service.authentication.gcp == 'enabled' }}
+        uses: google-github-actions/auth@v3
+        with:
+          project_id: ${{ secrets.GCP_PROJECT_ID }}
+          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
+          create_credentials_file: true
+          export_environment_variables: true
+          token_format: access_token
+      - name: Setup Google Cloud SDK
+        if: ${{ matrix.service.authentication.gcp == 'enabled' }}
+        uses: google-github-actions/setup-gcloud@v2
+        with:
+          project_id: ${{ secrets.GCP_PROJECT_ID }}
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.13.1"
       - name: Deploy service
         env:
           ARM_USE_OIDC: true
