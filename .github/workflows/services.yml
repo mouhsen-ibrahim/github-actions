@@ -82,16 +82,16 @@ jobs:
 
             echo "services=${services_json}" >> $GITHUB_OUTPUT
             echo "infra=${infra_json}" >> $GITHUB_OUTPUT
-            echo "docker=${docker_json}" >> $GITHUB_OUTPUT
+            echo "docker_services=${docker_json}" >> $GITHUB_OUTPUT
           fi
   publish_docker:
     needs: setup
     runs-on: ubuntu-latest
-    if: ${{ needs.setup.outputs.docker != '[]' }}
+    if: ${{ needs.setup.outputs.docker_services != '[]' }}
     strategy:
       fail-fast: false
       matrix:
-        service: ${{ fromJson(needs.setup.outputs.docker) }}
+        service: ${{ fromJson(needs.setup.outputs.docker_services) }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
