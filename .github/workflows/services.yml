@@ -73,17 +73,55 @@ jobs:
             fi
             services_all=$(opentelemetry-instrument python scripts/services.py --cmp ${last_successful_commit})
             services_json=$(echo "$services_all" | jq -c '.services')
+            docker_json=$(echo "$services_all" | jq -c '.docker')
             infra_json=$(echo "$services_all" | jq -c '.infra')
             # Debug output
             echo "Generated services JSON: $services_json"
             echo "Generated infra JSON: $infra_json"
+            echo "Generated docker JSON: $docker_json"
 
             echo "services=${services_json}" >> $GITHUB_OUTPUT
             echo "infra=${infra_json}" >> $GITHUB_OUTPUT
+            echo "docker=${docker_json}" >> $GITHUB_OUTPUT
           fi
-
-  build_services:
+  publish_docker:
     needs: setup
+    runs-on: ubuntu-latest
+    if: ${{ needs.setup.outputs.docker != '[]' }}
+    strategy:
+      fail-fast: false
+      matrix:
+        service: ${{ fromJson(needs.setup.outputs.docker) }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      - name: get docker registry
+        id: get_docker_registry
+        run: |
+          echo "Getting docker registry"
+          echo "DOCKER_REGISTRY=$(cat Makefile.variables | grep -oP 'DOCKER_REGISTRY=\K[^ ]+')" >> $GITHUB_OUTPUT
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ steps.get_docker_registry.outputs.DOCKER_REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and publish docker image
+        run: |
+          echo "Publishing docker: ${{ matrix.service.name }}"
+          echo "docker path: ${{ matrix.service.path }}"
+          cd "${{ matrix.service.path }}"
+          if [ -f "Makefile" ]; then
+            make publish
+          else
+            echo "No Makefile found in ${{ matrix.service.path }}"
+          fi
+  build_services:
+    needs: [setup, publish_docker]
     container:
       image: ${{ matrix.service.image }}
     runs-on: ubuntu-latest
@@ -137,7 +175,7 @@ jobs:
             echo "No Makefile found for testing in ${{ matrix.service.path }}"
           fi
   build_infra:
-    needs: setup
+    needs: [setup, publish_docker]
     container:
       image: ${{ matrix.service.image }}
     runs-on: ubuntu-latest

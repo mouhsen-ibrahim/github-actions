@@ -100,10 +100,12 @@ def get_changed_services(changes : List[str], config) -> dict[str, List[Service]
     # Use dict.fromkeys() to preserve order while removing duplicates
     all_services = changed_services + additional_services
     infra_services = [service for service in all_services if service.data.get("kind") == "terraform"]
-    rest_services = [service for service in all_services if service.data.get("kind") != "terraform"]
+    docker_services = [service for service in all_services if service.data.get("kind") == "docker"]
+    rest_services = [service for service in all_services if service.data.get("kind") != "terraform" and service.data.get("kind") != "docker"]
     return {
         "services": list(dict.fromkeys(rest_services)),
         "infra": list(dict.fromkeys(infra_services)),
+        "docker": list(dict.fromkeys(docker_services)),
     }
 
 def compare_services(cmp : str, config):
@@ -114,6 +116,7 @@ def compare_services(cmp : str, config):
         return {
             "services": [service.to_dict() for service in changed_service["services"]],
             "infra": [service.to_dict() for service in changed_service["infra"]],
+            "docker": [service.to_dict() for service in changed_service["docker"]],
         }
 
 def current_commit() -> str:
