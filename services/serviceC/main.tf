@@ -44,7 +44,7 @@ data "google_project" "this" {}
 
 resource "google_compute_network" "test" {
   auto_create_subnetworks = false
-  description = "A test network created via terraorm"
+  description = "A test network created via terraform"
   name = "net-test"
 }
 
