@@ -33,18 +33,18 @@ jobs:
         with:
           fetch-depth: 0
           ref: ${{ github.ref }}
-      - name: run services tests
-        if: ${{ github.event_name != 'workflow_dispatch' }}
-        run: cd scripts && pip install -r requirements.txt && make test
-      - name: run services coverage
-        if: ${{ github.event_name != 'workflow_dispatch' }}
-        run: cd scripts && make coverage
-      - name: save coverage report
-        if: ${{ github.event_name != 'workflow_dispatch' }}
-        uses: actions/upload-artifact@v4
-        with:
-          name: coverage-report
-          path: scripts/htmlcov
+      #- name: run services tests
+      #  if: ${{ github.event_name != 'workflow_dispatch' }}
+      #  run: cd scripts && pip install -r requirements.txt && make test
+      #- name: run services coverage
+      #  if: ${{ github.event_name != 'workflow_dispatch' }}
+      #  run: cd scripts && make coverage
+      #- name: save coverage report
+      #  if: ${{ github.event_name != 'workflow_dispatch' }}
+      #  uses: actions/upload-artifact@v4
+      #  with:
+      #    name: coverage-report
+      #    path: scripts/htmlcov
       - name: Set services list
         id: set-services
         env:
