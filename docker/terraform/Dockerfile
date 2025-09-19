@@ -1,6 +1,5 @@
 FROM hashicorp/terraform:1.13.1 AS plan
 
-# Install Azure CLI using pip (Alpine Linux compatible)
 RUN apk add --no-cache \
     python3 \
     py3-pip \
