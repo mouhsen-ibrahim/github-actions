@@ -100,10 +100,12 @@ def get_changed_services(changes : List[str], config) -> dict[str, List[Service]
     # Use dict.fromkeys() to preserve order while removing duplicates
     all_services = changed_services + additional_services
     infra_services = [service for service in all_services if service.data.get("kind") == "terraform"]
-    rest_services = [service for service in all_services if service.data.get("kind") != "terraform"]
+    docker_services = [service for service in all_services if service.data.get("kind") == "docker"]
+    rest_services = [service for service in all_services if service.data.get("kind") != "terraform" and service.data.get("kind") != "docker"]
     return {
         "services": list(dict.fromkeys(rest_services)),
         "infra": list(dict.fromkeys(infra_services)),
+        "docker": list(dict.fromkeys(docker_services)),
     }
 
 def compare_services(cmp : str, config):
@@ -114,10 +116,11 @@ def compare_services(cmp : str, config):
         return {
             "services": [service.to_dict() for service in changed_service["services"]],
             "infra": [service.to_dict() for service in changed_service["infra"]],
+            "docker": [service.to_dict() for service in changed_service["docker"]],
         }
 
-def current_commit() -> str:
-    return run_git("rev-parse", "HEAD")
+def previous_commit() -> str:
+    return run_git("rev-parse", "HEAD~1")
 
 def pick_first_success_run(runs: list) -> Optional[dict]:
     for r in runs:
@@ -159,7 +162,7 @@ def get_last_green_commit(owner: str, repo: str, branch: str, token: str,
     runs = list_runs(owner, repo, branch, token, workflow_id=workflow_id, workflow_ref=workflow)
     run = pick_first_success_run(runs)
     if not run:
-        return current_commit()
+        return previous_commit()
     return run.get("head_sha")
 
 
