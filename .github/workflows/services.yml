@@ -27,6 +27,7 @@ jobs:
     outputs:
       services: ${{ steps.set-services.outputs.services }}
       infra: ${{ steps.set-services.outputs.infra }}
+      docker: ${{ steps.set-services.outputs.docker }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v5
@@ -82,16 +83,16 @@ jobs:
 
             echo "services=${services_json}" >> $GITHUB_OUTPUT
             echo "infra=${infra_json}" >> $GITHUB_OUTPUT
-            echo "docker_services=${docker_json}" >> $GITHUB_OUTPUT
+            echo "docker=${docker_json}" >> $GITHUB_OUTPUT
           fi
   publish_docker:
     needs: setup
     runs-on: ubuntu-latest
-    if: ${{ needs.setup.outputs.docker_services != '[]' }}
+    if: ${{ needs.setup.outputs.docker != '[]' }}
     strategy:
       fail-fast: false
       matrix:
-        service: ${{ fromJson(needs.setup.outputs.docker_services) }}
+        service: ${{ fromJson(needs.setup.outputs.docker) }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
