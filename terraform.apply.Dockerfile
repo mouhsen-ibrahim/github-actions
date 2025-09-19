@@ -1,4 +1,4 @@
-FROM ghcr.io/mouhsen-ibrahim/github-actions:latest AS plan
+FROM ghcr.io/mouhsen-ibrahim/github-actions/ci-terraform:latest AS plan
 
 WORKDIR /workspace
 ARG service
