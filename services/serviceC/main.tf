@@ -1,10 +1,6 @@
 terraform {
   required_version = "1.13.1"
   required_providers {
-    random = {
-      source  = "hashicorp/random"
-      version = "~> 3.6"
-    }
     google = {
       source = "hashicorp/google"
       version = "7.3.0"
@@ -32,13 +28,6 @@ resource "google_project_service" "services" {
   disable_on_destroy = false
 }
 
-resource "random_string" "sample" {
-  length  = 30
-  upper   = true
-  lower   = true
-  numeric = true
-  special = false
-}
 
 data "google_project" "this" {}
 
@@ -46,11 +35,6 @@ resource "google_compute_network" "test" {
   auto_create_subnetworks = false
   description = "A test network"
   name = "net-test"
-}
-
-output "random_string_value" {
-  description = "The generated random string"
-  value       = random_string.sample.result
 }
 
 variable "project_id" {
