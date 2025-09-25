@@ -237,6 +237,8 @@ jobs:
           else
             echo "No Makefile found in ${{ matrix.service.path }}"
           fi
+          echo ${{ github.ref_name == 'main' }}
+          ${{ github.ref_name }}
       - name: Create tarball for artifacts
         if: ${{ matrix.service.artifact != '' }}
         run: tar -czf ${{ matrix.service.artifact }}.tar -C ${{ matrix.service.artifact_path }} .
