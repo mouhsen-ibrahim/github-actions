@@ -229,6 +229,7 @@ jobs:
           ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
           ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
         run: |
+          [ -f "${HOME}/.config/gcloud/application_default_credentials.json" ] || touch "${HOME}/.config/gcloud/application_default_credentials.json"
           echo "Building service: ${{ matrix.service.name }}"
           echo "Service path: ${{ matrix.service.path }}"
           cd "${{ matrix.service.path }}"
@@ -339,6 +340,7 @@ jobs:
           ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
         run: |
           echo "Deploying service: ${{ matrix.service.name }}"
+          [ -f "${HOME}/.config/gcloud/application_default_credentials.json" ] || touch "${HOME}/.config/gcloud/application_default_credentials.json"
           cd "${{ matrix.service.path }}"
           if [ -f "Makefile" ]; then
             make deploy
