@@ -261,7 +261,7 @@ jobs:
   publish_services:
     needs: [setup, build_services]
     runs-on: ubuntu-latest
-    if: ${{ always() && github.ref_name == 'main' }}
+    if: ${{ always() && github.ref_name == 'main' && needs.build_services.result == 'success' }}
     strategy:
       fail-fast: false
       matrix:
@@ -300,7 +300,7 @@ jobs:
   deploy_infra:
     needs: [setup, build_infra]
     runs-on: ubuntu-latest
-    if: ${{ always() && github.ref_name == 'main' }}
+    if: ${{ always() && github.ref_name == 'main' && needs.build_infra.result == 'success' }}
     strategy:
       matrix:
         service: ${{ fromJson(needs.setup.outputs.infra) }}
@@ -348,7 +348,7 @@ jobs:
   deploy_services:
     needs: [setup, deploy_infra, publish_services]
     runs-on: ubuntu-latest
-    if: ${{ always() && github.ref_name == 'main' }}
+    if: ${{ always() && github.ref_name == 'main' && needs.deploy_infra.result == 'success' && needs.publish_services.result == 'success' }}
     strategy:
       matrix:
         service: ${{ fromJson(needs.setup.outputs.services) }}
