@@ -180,7 +180,7 @@ jobs:
     container:
       image: ${{ matrix.service.image }}
     runs-on: ubuntu-latest
-    if: ${{ always() && needs.setup.outputs.infra != '[]' && (needs.publish_docker.result == 'success' || needs.publish_docker.result == 'skipped') }}
+    if: ${{ always() && needs.setup.outputs.infra != '[]' && (needs.publish_docker.result == 'success' || needs.publish_docker.result == 'skipped' || needs.setup.outputs.docker == '[]') }}
     strategy:
       fail-fast: false
       matrix:
