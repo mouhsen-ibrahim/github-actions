@@ -19,24 +19,6 @@ provider "google" {
   project = var.project_id
 }
 
-resource "google_project_service" "services" {
-  for_each = toset([
-    "compute.googleapis.com",
-  ])
-  project            = var.project_id
-  service            = each.key
-  disable_on_destroy = false
-}
-
-
-data "google_project" "this" {}
-
-resource "google_compute_network" "test" {
-  auto_create_subnetworks = false
-  description = "A test network"
-  name = "net-test"
-}
-
 variable "project_id" {
   description = "GCP project ID"
   type        = string
