@@ -7,4 +7,3 @@ artifact_load: terraform_plan
 artifact_path: services/serviceC/terraform-plan
 authentication:
   azure: enabled
-  gcp: enabled
