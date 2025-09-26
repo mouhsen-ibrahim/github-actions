@@ -92,6 +92,7 @@ jobs:
       fail-fast: false
       matrix:
         service: ${{ fromJson(needs.setup.outputs.docker) }}
+    if: ${{ needs.setup.outputs.docker != '[]' }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
