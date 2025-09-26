@@ -33,7 +33,7 @@ data "google_project" "this" {}
 
 resource "google_compute_network" "test" {
   auto_create_subnetworks = false
-  description = "A test network 1"
+  description = "A test network"
   name = "net-test"
 }
 
