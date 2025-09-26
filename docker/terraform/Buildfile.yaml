@@ -3,3 +3,4 @@ kind: docker
 artifact: docker_image_terraform_ci
 artifact_path: docker/terraform/docker.terraform-ci.tar
 artifact_load: docker_image_terraform_ci
+# test
