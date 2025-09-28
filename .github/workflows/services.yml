@@ -269,10 +269,12 @@ jobs:
             echo "No state found for branch or main."
             exit 0
           fi
-          echo "TF_VERSION=$(echo ${JSON} | jq -r .[0].value)" >> $GITHUB_ENV
-          for item in $(echo ${JSON} | jq -r '.[]'); do
-            echo "$item"
-            echo "export $(echo ${item} | jq -r .envKey)=\$(echo ${item} | jq -r .value)"
+          jq -c '.[]' <<<"$JSON" | while IFS= read -r obj; do
+            envKey=$(jq -r '.envKey // empty' <<<"$obj")
+            val=$(jq -r '.value // .valueFrom.makeTarget // empty' <<<"$obj")
+            if [[ -n "$envKey" && -n "$val" ]]; then
+              echo "$envKey=$val" >> "$GITHUB_ENV"   # makes it available to subsequent steps
+            fi
           done
       - name: Build service
         env:
