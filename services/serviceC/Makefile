@@ -7,7 +7,7 @@ build:
 	docker buildx build --build-context ext=${HOME}/.azure --secret id=gcloud_config,src=${GOOGLE_APPLICATION_CREDENTIALS} --target=export --output type=local,dest=./terraform-plan --build-arg VERSION=$(TF_VERSION) --build-arg service=services/serviceC -f ${ROOT}/terraform.Dockerfile ${ROOT}
 
 init:
-	docker buildx build --build-context ext=${HOME}/.azure --secret id=gcloud_config,src=${GOOGLE_APPLICATION_CREDENTIALS} --target=export --output type=local,dest=./terraform-plan --build-arg service=services/serviceC -f ${ROOT}/terraform.init.Dockerfile ${ROOT}
+	docker buildx build --build-context ext=${HOME}/.azure --secret id=gcloud_config,src=${GOOGLE_APPLICATION_CREDENTIALS} --target=export --output type=local,dest=./terraform-plan --build-arg VERSION=$(TF_VERSION) --build-arg service=services/serviceC -f ${ROOT}/terraform.init.Dockerfile ${ROOT}
 	cp ./terraform-plan/.terraform.lock.hcl .
 
 publish:
@@ -24,4 +24,4 @@ clean:
 
 deploy:
 	@echo "Deploying serviceC"
-	docker buildx build --build-context ext=${HOME}/.azure --secret id=gcloud_config,src=${GOOGLE_APPLICATION_CREDENTIALS} --build-arg service=services/serviceC -f ${ROOT}/terraform.apply.Dockerfile ${ROOT}
+	docker buildx build --build-context ext=${HOME}/.azure --secret id=gcloud_config,src=${GOOGLE_APPLICATION_CREDENTIALS} --build-arg VERSION=$(TF_VERSION) --build-arg service=services/serviceC -f ${ROOT}/terraform.apply.Dockerfile ${ROOT}
