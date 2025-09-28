@@ -8,3 +8,4 @@ artifact_path: services/serviceC/terraform-plan
 authentication:
   azure: enabled
 load: terraform-ci
+dependencies: ["terraform-ci"]
