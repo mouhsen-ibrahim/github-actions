@@ -22,8 +22,8 @@ class Service:
                 for i, item in enumerate(self.data["save"]):
                     if isinstance(item, dict):
                         if "valueFrom" in item:
-                            if "makeTarget" in item:
-                                target = item["makeTarget"]
+                            if "makeTarget" in item["valueFrom"]:
+                                target = item["valueFrom"]["makeTarget"]
                                 try:
                                     out = subprocess.check_output(["make", target], shell=False, cwd=self.path, stderr=subprocess.STDOUT)
                                     self.data["save"][i]["value"] = out.decode().strip()

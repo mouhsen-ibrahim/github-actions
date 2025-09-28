@@ -8,4 +8,4 @@ publish:
 	@docker push ${DOCKER_REGISTRY}/ci-terraform:${VERSION}
 
 commit:
-	echo ${VERSION}
+	@echo ${VERSION}
