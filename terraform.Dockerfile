@@ -1,4 +1,5 @@
-FROM ghcr.io/mouhsen-ibrahim/github-actions/ci-terraform:latest AS plan
+ARG VERSION=latest
+FROM ghcr.io/mouhsen-ibrahim/github-actions/ci-terraform:${VERSION} AS plan
 
 WORKDIR /workspace
 ARG service
