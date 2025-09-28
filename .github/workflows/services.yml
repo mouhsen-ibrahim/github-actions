@@ -136,11 +136,13 @@ jobs:
         run: |
           echo "Saving data to GCS: ${{ matrix.service.name }}"
           echo ${{ matrix.service.save != '' }} > state.json
-          echo ${GOOGLE_APPLICATION_CREDENTIALS}
-          cat state.json
-          cat ${GOOGLE_APPLICATION_CREDENTIALS}
+          # Authenticate gcloud with the federated credentials file
+          if [ -n "${GOOGLE_APPLICATION_CREDENTIALS}" ] && [ -f "${GOOGLE_APPLICATION_CREDENTIALS}" ]; then
+            gcloud auth login --cred-file="${GOOGLE_APPLICATION_CREDENTIALS}"
+          fi
           gcloud auth list
-          gsutil cp state.json gs://${{ secrets.GCP_BUCKET_NAME }}/${{ matrix.service.name }}/main.json
+          # Use gcloud storage (respects gcloud auth login with --cred-file)
+          gcloud storage cp state.json gs://${{ secrets.GCP_BUCKET_NAME }}/${{ matrix.service.name }}/main.json
   build_services:
     needs: [setup, publish_docker]
     container:

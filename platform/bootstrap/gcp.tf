@@ -127,6 +127,13 @@ resource "google_storage_bucket" "state" {
   location = "EU"
 }
 
+# Grant the CI service account permissions to write objects to the bucket
+resource "google_storage_bucket_iam_member" "state_object_admin" {
+  bucket = google_storage_bucket.state.name
+  role   = "roles/storage.objectAdmin"
+  member = "serviceAccount:${google_service_account.ci.email}"
+}
+
 resource "github_actions_secret" "state_bucket" {
   repository      = var.github_repository
   secret_name     = "GCP_BUCKET_NAME"
