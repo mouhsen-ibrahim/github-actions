@@ -24,4 +24,5 @@ clean:
 
 deploy:
 	@echo "Deploying serviceC"
+	mkdir -p ./terraform-plan
 	docker buildx build --build-context ext=${HOME}/.azure --secret id=gcloud_config,src=${GOOGLE_APPLICATION_CREDENTIALS} --build-arg VERSION=$(TF_VERSION) --build-arg action=apply --build-arg service=services/serviceC -f ${ROOT}/terraform.Dockerfile ${ROOT}

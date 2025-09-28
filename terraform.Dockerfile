@@ -6,7 +6,7 @@ ARG service
 COPY ${service} /workspace
 ARG action=plan
 
-RUN --mount=type=bind,from=ext,source=.,target=/azcfg,readonly --mount=type=secret,id=gcloud_config sh -c "\
+RUN --mount=type=bind,source=${service}/terraform-plan,target=/terraform,readonly --mount=type=bind,from=ext,source=.,target=/azcfg,readonly --mount=type=secret,id=gcloud_config sh -c "\
     mkdir -p /tmp/azcfg && cp -a /azcfg/* /tmp/azcfg/ && \
     export AZURE_CONFIG_DIR=/tmp/azcfg && \
     mkdir /out && \
