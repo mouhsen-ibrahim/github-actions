@@ -6,3 +6,6 @@ BUILD_DATE := $(shell date -u +"%Y-%m-%dT%H:%M:%SZ")
 publish:
 	@docker build --build-arg VERSION=$(VERSION) --build-arg VCS_REF=$(VCS_REF) --build-arg BUILD_DATE=$(BUILD_DATE) -t ${DOCKER_REGISTRY}/ci-terraform:${VERSION} -f Dockerfile .
 	@docker push ${DOCKER_REGISTRY}/ci-terraform:${VERSION}
+
+commit:
+	echo ${VERSION}

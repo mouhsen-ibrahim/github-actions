@@ -17,6 +17,19 @@ class Service:
         with open(os.path.join(self.path, "Buildfile.yaml"), 'r') as f:
             self.data = yaml.safe_load(f)
             self.data["path"] = self.path
+        if "save" in self.data:
+            if isinstance(self.data["save"], list):
+                for i, item in enumerate(self.data["save"]):
+                    if isinstance(item, dict):
+                        if "valueFrom" in item:
+                            if "makeTarget" in item:
+                                target = item["makeTarget"]
+                                try:
+                                    out = subprocess.check_output(["make", target], shell=False, cwd=self.path, stderr=subprocess.STDOUT)
+                                    self.data["save"][i]["value"] = out.decode().strip()
+                                except subprocess.CalledProcessError as e:
+                                    msg = e.output.decode().strip()
+                                    raise RuntimeError(f"Make target '{target}' failed: {msg}") from e
 
     def __repr__(self):
         return str(self.data)
