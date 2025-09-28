@@ -246,12 +246,13 @@ jobs:
       #- uses: hashicorp/setup-terraform@v3
       #  with:
       #    terraform_version: "1.13.1"
-      - name: Read state (branch → fallback main)
+      - name: load state
         id: state
+        if: ${{ matrix.service.load != '' }}
         shell: bash
         run: |
-          path="gs://${{ secrets.GCP_BUCKET_NAME }}/${{ matrix.service.name }}/${{ needs.setup.outputs.git_banch }}.json"
-          fallback="gs://${{ secrets.GCP_BUCKET_NAME }}/${{ matrix.service.name }}/main.json"
+          path="gs://${{ secrets.GCP_BUCKET_NAME }}/${{ matrix.service.load }}/${{ needs.setup.outputs.git_banch }}.json"
+          fallback="gs://${{ secrets.GCP_BUCKET_NAME }}/${{ matrix.service.load }}/main.json"
           # Authenticate gcloud with the federated credentials file
           if [ -n "${GOOGLE_APPLICATION_CREDENTIALS}" ] && [ -f "${GOOGLE_APPLICATION_CREDENTIALS}" ]; then
             gcloud auth login --cred-file="${GOOGLE_APPLICATION_CREDENTIALS}"
