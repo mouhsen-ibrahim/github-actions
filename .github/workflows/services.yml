@@ -269,6 +269,7 @@ jobs:
             echo "No state found for branch or main."
             exit 0
           fi
+          echo "TF_VERSION=$(echo ${JSON} | jq -r .[0].value)" >> $GITHUB_ENV
       - name: Build service
         env:
           ARM_USE_OIDC: true
@@ -279,6 +280,7 @@ jobs:
           [ -f "${HOME}/.config/gcloud/application_default_credentials.json" ] || mkdir -p ${HOME}/.config/gcloud && touch "${HOME}/.config/gcloud/application_default_credentials.json"
           echo "Building service: ${{ matrix.service.name }}"
           echo "Service path: ${{ matrix.service.path }}"
+          echo "TF_VERSION is ${TF_VERSION}"
           cd "${{ matrix.service.path }}"
           if [ -f "Makefile" ]; then
             make build
