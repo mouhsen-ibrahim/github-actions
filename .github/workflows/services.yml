@@ -136,6 +136,9 @@ jobs:
         run: |
           echo "Saving data to GCS: ${{ matrix.service.name }}"
           echo ${{ matrix.service.save != '' }} > state.json
+          echo ${GOOGLE_APPLICATION_CREDENTIALS}
+          cat state.json
+          cat ${GOOGLE_APPLICATION_CREDENTIALS}
           gsutil cp state.json gs://${{ secrets.GCP_BUCKET_NAME }}/${{ matrix.service.name }}/main.json
   build_services:
     needs: [setup, publish_docker]
