@@ -139,6 +139,7 @@ jobs:
           echo ${GOOGLE_APPLICATION_CREDENTIALS}
           cat state.json
           cat ${GOOGLE_APPLICATION_CREDENTIALS}
+          gcloud auth list
           gsutil cp state.json gs://${{ secrets.GCP_BUCKET_NAME }}/${{ matrix.service.name }}/main.json
   build_services:
     needs: [setup, publish_docker]
