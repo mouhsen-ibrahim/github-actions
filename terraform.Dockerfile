@@ -10,7 +10,6 @@ RUN --mount=type=bind,from=ext,source=.,target=/azcfg,readonly --mount=type=secr
     export AZURE_CONFIG_DIR=/tmp/azcfg && \
     mkdir /out && \
     export GOOGLE_APPLICATION_CREDENTIALS=/run/secrets/gcloud_config && \
-    az ad signed-in-user show && \
     terraform init -lockfile=readonly -input=false && \
     terraform validate && \
     terraform plan -input=false -out=/out/plan.out && \
