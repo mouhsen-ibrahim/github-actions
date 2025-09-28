@@ -234,7 +234,6 @@ jobs:
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
       - name: Login to GCP
-        if: ${{ matrix.service.authentication.gcp == 'enabled' }}
         uses: google-github-actions/auth@v3
         with:
           project_id: ${{ secrets.GCP_PROJECT_ID }}
@@ -252,13 +251,16 @@ jobs:
         run: |
           path="gs://${{ secrets.GCP_BUCKET_NAME }}/${{ matrix.service.name }}/${{ needs.setup.outputs.git_banch }}.json"
           fallback="gs://${{ secrets.GCP_BUCKET_NAME }}/${{ matrix.service.name }}/main.json"
-
-          if gsutil -q stat "$path"; then
-            JSON=$(gsutil cat "$path")
+          # Authenticate gcloud with the federated credentials file
+          if [ -n "${GOOGLE_APPLICATION_CREDENTIALS}" ] && [ -f "${GOOGLE_APPLICATION_CREDENTIALS}" ]; then
+            gcloud auth login --cred-file="${GOOGLE_APPLICATION_CREDENTIALS}"
+          fi
+          if gcloud storage -q stat "$path"; then
+            JSON=$(gcloud storage cat "$path")
             echo "Using branch state: $path"
             echo ${JSON}
-          elif gsutil -q stat "$fallback"; then
-            JSON=$(gsutil cat "$fallback")
+          elif gcloud storage -q stat "$fallback"; then
+            JSON=$(gcloud storage cat "$fallback")
             echo "Branch state missing; using fallback: $fallback"
             echo ${JSON}
           else
