@@ -260,11 +260,9 @@ jobs:
           if gcloud storage objects list "$path"; then
             JSON=$(gcloud storage cat "$path")
             echo "Using branch state: $path"
-            echo ${JSON}
           elif gcloud storage objects list "$fallback"; then
             JSON=$(gcloud storage cat "$fallback")
             echo "Branch state missing; using fallback: $fallback"
-            echo ${JSON}
           else
             echo "No state found for branch or main."
             exit 0
