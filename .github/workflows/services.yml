@@ -28,6 +28,7 @@ jobs:
       services: ${{ steps.set-services.outputs.services }}
       infra: ${{ steps.set-services.outputs.infra }}
       docker: ${{ steps.set-services.outputs.docker }}
+      git_banch: ${{ steps.set-services.outputs.GIT_BRANCH }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v5
@@ -64,8 +65,10 @@ jobs:
             if [ -z "${{ github.head_ref }}" ];
             then
               last_successful_commit=$(opentelemetry-instrument python scripts/services.py --last-green --owner ${{ github.repository_owner }} --repo ${{ github.event.repository.name }} --branch ${{ github.ref_name }})
+              echo "GIT_BRANCH=${{ github.ref_name }}" >> $GITHUB_OUTPUT
             else
               last_successful_commit=$(opentelemetry-instrument python scripts/services.py --last-green --owner ${{ github.repository_owner }} --repo ${{ github.event.repository.name }} --branch ${{ github.head_ref }})
+              echo "GIT_BRANCH=${{ github.head_ref }}" >> $GITHUB_OUTPUT
             fi
             echo "Last successful commit: ${last_successful_commit}"
             if ! git cat-file -e "${last_successful_commit}^{commit}" 2>/dev/null; then
@@ -140,9 +143,8 @@ jobs:
           if [ -n "${GOOGLE_APPLICATION_CREDENTIALS}" ] && [ -f "${GOOGLE_APPLICATION_CREDENTIALS}" ]; then
             gcloud auth login --cred-file="${GOOGLE_APPLICATION_CREDENTIALS}"
           fi
-          gcloud auth list
           # Use gcloud storage (respects gcloud auth login with --cred-file)
-          gcloud storage cp state.json gs://${{ secrets.GCP_BUCKET_NAME }}/${{ matrix.service.name }}/main.json
+          gcloud storage cp state.json gs://${{ secrets.GCP_BUCKET_NAME }}/${{ matrix.service.name }}/${{ needs.setup.outputs.git_banch }}.json
   build_services:
     needs: [setup, publish_docker]
     container:
