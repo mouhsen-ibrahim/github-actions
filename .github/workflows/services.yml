@@ -270,6 +270,9 @@ jobs:
             exit 0
           fi
           echo "TF_VERSION=$(echo ${JSON} | jq -r .[0].value)" >> $GITHUB_ENV
+          for item in $(echo ${JSON} | jq -r '.[]'); do
+            echo "$item"
+          done
       - name: Build service
         env:
           ARM_USE_OIDC: true
