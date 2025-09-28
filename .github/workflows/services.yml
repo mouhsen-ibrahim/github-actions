@@ -138,7 +138,7 @@ jobs:
         if: ${{ matrix.service.save != '' }}
         run: |
           echo "Saving data to GCS: ${{ matrix.service.name }}"
-          echo ${{ matrix.service.save }} > state.json
+          echo '${{ toJson(matrix.service.save) }}' > state.json
           cat state.json
           # Authenticate gcloud with the federated credentials file
           if [ -n "${GOOGLE_APPLICATION_CREDENTIALS}" ] && [ -f "${GOOGLE_APPLICATION_CREDENTIALS}" ]; then
