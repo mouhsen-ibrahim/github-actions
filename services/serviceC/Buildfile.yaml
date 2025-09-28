@@ -1,5 +1,5 @@
 name: serviceC
-description: Service C for demonstration
+description: terraform service
 team: sre
 kind: terraform
 artifact: terraform_plan
