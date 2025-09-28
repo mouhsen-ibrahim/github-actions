@@ -11,7 +11,7 @@ RUN apk add --no-cache \
     cargo \
     make \
     pipx
-#RUN pipx install azure-cli
+RUN pipx install azure-cli
 ENV PATH=/root/.local/bin:${PATH}
 
 ARG VERSION
