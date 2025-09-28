@@ -272,6 +272,7 @@ jobs:
           echo "TF_VERSION=$(echo ${JSON} | jq -r .[0].value)" >> $GITHUB_ENV
           for item in $(echo ${JSON} | jq -r '.[]'); do
             echo "$item"
+            echo "export $(echo ${item} | jq -r .envKey)=\$(echo ${item} | jq -r .value)"
           done
       - name: Build service
         env:

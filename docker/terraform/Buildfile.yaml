@@ -7,3 +7,4 @@ save:
   - key: docker_image_terraform_ci
     valueFrom:
       makeTarget: commit
+    envKey: TF_VERSION
