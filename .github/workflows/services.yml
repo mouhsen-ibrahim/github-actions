@@ -139,6 +139,7 @@ jobs:
         run: |
           echo "Saving data to GCS: ${{ matrix.service.name }}"
           echo ${{ matrix.service.save }} > state.json
+          cat state.json
           # Authenticate gcloud with the federated credentials file
           if [ -n "${GOOGLE_APPLICATION_CREDENTIALS}" ] && [ -f "${GOOGLE_APPLICATION_CREDENTIALS}" ]; then
             gcloud auth login --cred-file="${GOOGLE_APPLICATION_CREDENTIALS}"
@@ -255,11 +256,11 @@ jobs:
           if [ -n "${GOOGLE_APPLICATION_CREDENTIALS}" ] && [ -f "${GOOGLE_APPLICATION_CREDENTIALS}" ]; then
             gcloud auth login --cred-file="${GOOGLE_APPLICATION_CREDENTIALS}"
           fi
-          if gcloud storage -q stat "$path"; then
+          if gcloud storage objects list "$path"; then
             JSON=$(gcloud storage cat "$path")
             echo "Using branch state: $path"
             echo ${JSON}
-          elif gcloud storage -q stat "$fallback"; then
+          elif gcloud storage objects list "$fallback"; then
             JSON=$(gcloud storage cat "$fallback")
             echo "Branch state missing; using fallback: $fallback"
             echo ${JSON}
