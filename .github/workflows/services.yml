@@ -28,6 +28,7 @@ jobs:
       services: ${{ steps.set-services.outputs.services }}
       infra: ${{ steps.set-services.outputs.infra }}
       docker: ${{ steps.set-services.outputs.docker }}
+      git_banch: ${{ steps.set-services.outputs.GIT_BRANCH }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v5
@@ -64,8 +65,10 @@ jobs:
             if [ -z "${{ github.head_ref }}" ];
             then
               last_successful_commit=$(opentelemetry-instrument python scripts/services.py --last-green --owner ${{ github.repository_owner }} --repo ${{ github.event.repository.name }} --branch ${{ github.ref_name }})
+              echo "GIT_BRANCH=${{ github.ref_name }}" >> $GITHUB_OUTPUT
             else
               last_successful_commit=$(opentelemetry-instrument python scripts/services.py --last-green --owner ${{ github.repository_owner }} --repo ${{ github.event.repository.name }} --branch ${{ github.head_ref }})
+              echo "GIT_BRANCH=${{ github.head_ref }}" >> $GITHUB_OUTPUT
             fi
             echo "Last successful commit: ${last_successful_commit}"
             if ! git cat-file -e "${last_successful_commit}^{commit}" 2>/dev/null; then
@@ -121,6 +124,22 @@ jobs:
           else
             echo "No Makefile found in ${{ matrix.service.path }}"
           fi
+      - name: Login to GCP
+        if: ${{ matrix.service.save != '' }}
+        uses: google-github-actions/auth@v3
+        with:
+          project_id: ${{ secrets.GCP_PROJECT_ID }}
+          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
+          create_credentials_file: true
+          export_environment_variables: true
+          token_format: access_token
+      - name: Save data to GCS
+        if: ${{ matrix.service.save != '' }}
+        run: |
+          echo "Saving data to GCS: ${{ matrix.service.name }}"
+          echo '${{ toJson(matrix.service.save) }}' > state.json
+          gcloud storage cp state.json gs://${{ secrets.GCP_BUCKET_NAME }}/${{ matrix.service.name }}/${{ needs.setup.outputs.git_banch }}.json
   build_services:
     needs: [setup, publish_docker]
     container:
@@ -210,8 +229,8 @@ jobs:
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
       - name: Login to GCP
-        if: ${{ matrix.service.authentication.gcp == 'enabled' }}
         uses: google-github-actions/auth@v3
+        if: ${{ matrix.service.authentication.gcp == 'enabled' || matrix.service.load != '' }}
         with:
           project_id: ${{ secrets.GCP_PROJECT_ID }}
           workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
@@ -222,6 +241,30 @@ jobs:
       #- uses: hashicorp/setup-terraform@v3
       #  with:
       #    terraform_version: "1.13.1"
+      - name: load state
+        id: state
+        if: ${{ matrix.service.load != '' }}
+        shell: bash
+        run: |
+          path="gs://${{ secrets.GCP_BUCKET_NAME }}/${{ matrix.service.load }}/${{ needs.setup.outputs.git_banch }}.json"
+          fallback="gs://${{ secrets.GCP_BUCKET_NAME }}/${{ matrix.service.load }}/main.json"
+          if gcloud storage objects list "$path"; then
+            JSON=$(gcloud storage cat "$path")
+            echo "Using branch state: $path"
+          elif gcloud storage objects list "$fallback"; then
+            JSON=$(gcloud storage cat "$fallback")
+            echo "Branch state missing; using fallback: $fallback"
+          else
+            echo "No state found for branch or main."
+            exit 0
+          fi
+          jq -c '.[]' <<<"$JSON" | while IFS= read -r obj; do
+            envKey=$(jq -r '.envKey // .key // empty' <<<"$obj")
+            val=$(jq -r '.value // empty' <<<"$obj")
+            if [[ -n "$envKey" && -n "$val" ]]; then
+              echo "$envKey=$val" >> "$GITHUB_ENV"
+            fi
+          done
       - name: Build service
         env:
           ARM_USE_OIDC: true
@@ -323,7 +366,7 @@ jobs:
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
       - name: Login to GCP
-        if: ${{ matrix.service.authentication.gcp == 'enabled' }}
+        if: ${{ matrix.service.authentication.gcp == 'enabled' || matrix.service.load != '' }}
         uses: google-github-actions/auth@v3
         with:
           project_id: ${{ secrets.GCP_PROJECT_ID }}
@@ -332,6 +375,30 @@ jobs:
           create_credentials_file: true
           export_environment_variables: true
           token_format: access_token
+      - name: load state
+        id: state
+        if: ${{ matrix.service.load != '' }}
+        shell: bash
+        run: |
+          path="gs://${{ secrets.GCP_BUCKET_NAME }}/${{ matrix.service.load }}/${{ needs.setup.outputs.git_banch }}.json"
+          fallback="gs://${{ secrets.GCP_BUCKET_NAME }}/${{ matrix.service.load }}/main.json"
+          if gcloud storage objects list "$path"; then
+            JSON=$(gcloud storage cat "$path")
+            echo "Using branch state: $path"
+          elif gcloud storage objects list "$fallback"; then
+            JSON=$(gcloud storage cat "$fallback")
+            echo "Branch state missing; using fallback: $fallback"
+          else
+            echo "No state found for branch or main."
+            exit 0
+          fi
+          jq -c '.[]' <<<"$JSON" | while IFS= read -r obj; do
+            envKey=$(jq -r '.envKey // .key // empty' <<<"$obj")
+            val=$(jq -r '.value // empty' <<<"$obj")
+            if [[ -n "$envKey" && -n "$val" ]]; then
+              echo "$envKey=$val" >> "$GITHUB_ENV"
+            fi
+          done
       - name: Deploy service
         env:
           ARM_USE_OIDC: true
