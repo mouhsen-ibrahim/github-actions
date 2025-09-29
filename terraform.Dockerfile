@@ -13,16 +13,16 @@ RUN --mount=type=bind,source=${service}/terraform-plan,target=/terraform,readonl
     export GOOGLE_APPLICATION_CREDENTIALS=/run/secrets/gcloud_config && \
     terraform init -lockfile=readonly -input=false && \
     terraform validate && \
-    if [ \"${action}\" = \"plan\" ]; then
+    if [ \"${action}\" = \"plan\" ]; then && \
         terraform plan -input=false -out=/out/plan.out && \
         echo '\n--- Plan saved to plan.out ---\n' && \
         terraform show -no-color /out/plan.out && \
-    else if [ \"${action}\" = \"init\" ]; then
+    else if [ \"${action}\" = \"init\" ]; then && \
         echo '\n--- no action ---\n' && \
     else if [ \"${action}\" = \"apply\" ]; then
         terraform apply -input=false -auto-approve /terraform/plan.out && \
         echo '\n--- Apply completed ---\n' && \
-    else
+    else && \
         echo "Unsupported action: ${action}" && exit 1
     fi && \
     cp -r .terraform /out/ && \
