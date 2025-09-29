@@ -248,10 +248,10 @@ jobs:
         run: |
           path="gs://${{ secrets.GCP_BUCKET_NAME }}/${{ matrix.service.load }}/${{ needs.setup.outputs.git_banch }}.json"
           fallback="gs://${{ secrets.GCP_BUCKET_NAME }}/${{ matrix.service.load }}/main.json"
-          if gcloud storage objects list "$path"; then
+          if gcloud storage ls "$path"; then
             JSON=$(gcloud storage cat "$path")
             echo "Using branch state: $path"
-          elif gcloud storage objects list "$fallback"; then
+          elif gcloud storage ls "$fallback"; then
             JSON=$(gcloud storage cat "$fallback")
             echo "Branch state missing; using fallback: $fallback"
           else
