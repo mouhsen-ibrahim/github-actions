@@ -19,11 +19,11 @@ RUN --mount=type=bind,source=${service}/terraform-plan,target=/terraform,readonl
         terraform show -no-color /out/plan.out && \
     else if [ \"${action}\" = \"init\" ]; then && \
         echo '\n--- no action ---\n' && \
-    else if [ \"${action}\" = \"apply\" ]; then
+    else if [ \"${action}\" = \"apply\" ]; then && \
         terraform apply -input=false -auto-approve /terraform/plan.out && \
         echo '\n--- Apply completed ---\n' && \
     else && \
-        echo "Unsupported action: ${action}" && exit 1
+        echo "Unsupported action: ${action}" && exit 1 && \
     fi && \
     cp -r .terraform /out/ && \
     cp .terraform.lock.hcl /out/ \
