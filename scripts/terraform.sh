@@ -6,8 +6,8 @@ export AZURE_CONFIG_DIR=/tmp/azcfg
 mkdir /out
 export GOOGLE_APPLICATION_CREDENTIALS=/run/secrets/gcloud_config
 terraform init -lockfile=readonly -input=false
-terraform validate
 if [ "${action}" = "plan" ]; then
+    terraform validate
     terraform plan -input=false -out=/out/plan.out
     echo '\n--- Plan saved to plan.out ---\n'
     terraform show -no-color /out/plan.out;

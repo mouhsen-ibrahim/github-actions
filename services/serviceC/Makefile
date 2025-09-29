@@ -8,6 +8,7 @@ build:
 	docker buildx build --build-context ext=${HOME}/.azure --secret id=gcloud_config,src=${GOOGLE_APPLICATION_CREDENTIALS} --target=export --output type=local,dest=./terraform-plan --build-arg VERSION=$(TF_VERSION) --build-arg action=plan --build-arg service=services/serviceC -f ${ROOT}/terraform.Dockerfile ${ROOT}
 
 init:
+	@mkdir -p ./terraform-plan
 	docker buildx build --build-context ext=${HOME}/.azure --secret id=gcloud_config,src=${GOOGLE_APPLICATION_CREDENTIALS} --target=export --output type=local,dest=./terraform-plan --build-arg VERSION=$(TF_VERSION) --build-arg action=init --build-arg service=services/serviceC -f ${ROOT}/terraform.Dockerfile ${ROOT}
 	cp ./terraform-plan/.terraform.lock.hcl .
 

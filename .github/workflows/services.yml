@@ -344,7 +344,7 @@ jobs:
   deploy_infra:
     needs: [setup, build_infra]
     runs-on: ubuntu-latest
-    #if: ${{ always() && github.ref_name == 'main' && needs.build_infra.result == 'success' }}
+    if: ${{ always() && github.ref_name == 'main' && needs.build_infra.result == 'success' }}
     strategy:
       matrix:
         service: ${{ fromJson(needs.setup.outputs.infra) }}
