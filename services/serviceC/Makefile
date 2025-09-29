@@ -4,10 +4,12 @@ VERSION    					   ?= $(shell git describe --tags --always --dirty 2>/dev/null |
 TF_VERSION    				   ?= $(shell git describe --tags --always --dirty 2>/dev/null || echo dev)
 build:
 	@echo "Building serviceC"
-	docker buildx build --build-context ext=${HOME}/.azure --secret id=gcloud_config,src=${GOOGLE_APPLICATION_CREDENTIALS} --target=export --output type=local,dest=./terraform-plan --build-arg VERSION=$(TF_VERSION) --build-arg service=services/serviceC -f ${ROOT}/terraform.Dockerfile ${ROOT}
+	@mkdir -p ./terraform-plan
+	docker buildx build --build-context ext=${HOME}/.azure --secret id=gcloud_config,src=${GOOGLE_APPLICATION_CREDENTIALS} --target=export --output type=local,dest=./terraform-plan --build-arg VERSION=$(TF_VERSION) --build-arg action=plan --build-arg service=services/serviceC -f ${ROOT}/terraform.Dockerfile ${ROOT}
 
 init:
-	docker buildx build --build-context ext=${HOME}/.azure --secret id=gcloud_config,src=${GOOGLE_APPLICATION_CREDENTIALS} --target=export --output type=local,dest=./terraform-plan --build-arg VERSION=$(TF_VERSION) --build-arg service=services/serviceC -f ${ROOT}/terraform.init.Dockerfile ${ROOT}
+	@mkdir -p ./terraform-plan
+	docker buildx build --build-context ext=${HOME}/.azure --secret id=gcloud_config,src=${GOOGLE_APPLICATION_CREDENTIALS} --target=export --output type=local,dest=./terraform-plan --build-arg VERSION=$(TF_VERSION) --build-arg action=init --build-arg service=services/serviceC -f ${ROOT}/terraform.Dockerfile ${ROOT}
 	cp ./terraform-plan/.terraform.lock.hcl .
 
 publish:
@@ -24,4 +26,5 @@ clean:
 
 deploy:
 	@echo "Deploying serviceC"
-	docker buildx build --build-context ext=${HOME}/.azure --secret id=gcloud_config,src=${GOOGLE_APPLICATION_CREDENTIALS} --build-arg VERSION=$(TF_VERSION) --build-arg service=services/serviceC -f ${ROOT}/terraform.apply.Dockerfile ${ROOT}
+	mkdir -p ./terraform-plan
+	docker buildx build --build-context ext=${HOME}/.azure --secret id=gcloud_config,src=${GOOGLE_APPLICATION_CREDENTIALS} --build-arg VERSION=$(TF_VERSION) --build-arg action=apply --build-arg service=services/serviceC -f ${ROOT}/terraform.Dockerfile ${ROOT}
