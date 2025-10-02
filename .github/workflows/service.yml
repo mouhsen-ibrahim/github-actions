@@ -58,8 +58,6 @@ on:
         required: false
       GCP_BUCKET_NAME:
         required: false
-      GITHUB_TOKEN:
-        required: true
 
 permissions:
   contents: read
