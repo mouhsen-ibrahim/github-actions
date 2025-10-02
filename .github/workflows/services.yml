@@ -196,7 +196,7 @@ jobs:
           fi
   build_infra:
     needs: [setup, publish_docker]
-    uses: ./.github/workflows/shared/service.yml
+    uses: ./.github/workflows/service.yml
     with:
       service: ${{ matrix.service }}
       target: build
