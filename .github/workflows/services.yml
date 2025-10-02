@@ -181,6 +181,8 @@ jobs:
       path: ${{ matrix.service.path }}
       artifact: ${{ matrix.service.artifact }}
       artifact_path: ${{ matrix.service.artifact_path }}
+      artifact_load: ${{ matrix.service.artifact_load }}
+      artifact_tar: false
       git_branch: ${{ needs.setup.outputs.git_branch }}
       save: ${{ toJson(matrix.service.save) }}
       load: ${{ matrix.service.load }}
