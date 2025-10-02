@@ -145,7 +145,7 @@ jobs:
         with:
           name: ${{ inputs.artifact_load }}
       - name: untar artifact
-        if: ${{ inputs.artifact_tar }}
+        if: ${{ inputs.artifact_tar && inputs.artifact_load != '' }}
         run: mkdir -p ${{ inputs.artifact_path }} && tar --no-same-owner -xzf ${{ inputs.artifact_load }}.tar -C ${{ inputs.artifact_path }}
       - name: ${{ inputs.target }} service
         env:
