@@ -205,8 +205,8 @@ jobs:
       git_branch: ${{ needs.setup.outputs.git_branch }}
       save: ${{ matrix.service.save }}
       load: ${{ matrix.service.load }}
-      authentication_azure: ${{ matrix.service.authentication.azure }}
-      authentication_gcp: ${{ matrix.service.authentication.gcp }}
+      authentication_azure: ${{ matrix.service.authentication.azure == 'enabled' }}
+      authentication_gcp: ${{ matrix.service.authentication.gcp == 'enabled' }}
       target: build
     secrets:
       GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
