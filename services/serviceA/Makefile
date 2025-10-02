@@ -6,6 +6,8 @@ build:
 	@echo "Building serviceA"
 	@docker build --build-arg service=services/serviceA --build-arg VERSION=$(VERSION) --build-arg VCS_REF=$(VCS_REF) --build-arg BUILD_DATE=$(BUILD_DATE) -t ${DOCKER_REGISTRY}/servicea:${VERSION} -f ${ROOT}/go.Dockerfile ${ROOT}
 	@docker save ${DOCKER_REGISTRY}/servicea:${VERSION} -o docker.servicea.tar
+	echo "Saved artifact to docker.servicea.tar"
+	pwd
 
 publish:
 	@echo "Publishing serviceA"
