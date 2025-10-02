@@ -196,112 +196,18 @@ jobs:
           fi
   build_infra:
     needs: [setup, publish_docker]
-    container:
-      image: ${{ matrix.service.image }}
-    runs-on: ubuntu-latest
+    uses: ./.github/workflows/shared/service.yml
+    with:
+      service: ${{ matrix.service }}
+      target: build
+    secrets:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     if: ${{ always() && needs.setup.outputs.infra != '[]' && (needs.publish_docker.result == 'success' || needs.publish_docker.result == 'skipped' ) }}
     strategy:
       fail-fast: false
       matrix:
         service: ${{ fromJson(needs.setup.outputs.infra) }}
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-      - name: get docker registry
-        id: get_docker_registry
-        run: |
-          echo "Getting docker registry"
-          echo "DOCKER_REGISTRY=$(cat Makefile.variables | grep -oP 'DOCKER_REGISTRY=\K[^ ]+')" >> $GITHUB_OUTPUT
-
-      - name: Log in to GHCR
-        uses: docker/login-action@v3
-        with:
-          registry: ${{ steps.get_docker_registry.outputs.DOCKER_REGISTRY }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-      - name: Azure Login with OIDC
-        if: ${{ matrix.service.authentication.azure == 'enabled' }}
-        uses: azure/login@v2
-        with:
-          client-id: ${{ secrets.AZURE_CLIENT_ID }}
-          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-      - name: Login to GCP
-        uses: google-github-actions/auth@v3
-        if: ${{ matrix.service.authentication.gcp == 'enabled' || matrix.service.load != '' }}
-        with:
-          project_id: ${{ secrets.GCP_PROJECT_ID }}
-          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
-          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
-          create_credentials_file: true
-          export_environment_variables: true
-          token_format: access_token
-      #- uses: hashicorp/setup-terraform@v3
-      #  with:
-      #    terraform_version: "1.13.1"
-      - name: load state
-        id: state
-        if: ${{ matrix.service.load != '' }}
-        shell: bash
-        run: |
-          path="gs://${{ secrets.GCP_BUCKET_NAME }}/${{ matrix.service.load }}/${{ needs.setup.outputs.git_banch }}.json"
-          fallback="gs://${{ secrets.GCP_BUCKET_NAME }}/${{ matrix.service.load }}/main.json"
-          if gcloud storage ls "$path"; then
-            JSON=$(gcloud storage cat "$path")
-            echo "Using branch state: $path"
-          elif gcloud storage ls "$fallback"; then
-            JSON=$(gcloud storage cat "$fallback")
-            echo "Branch state missing; using fallback: $fallback"
-          else
-            echo "No state found for branch or main."
-            exit 0
-          fi
-          jq -c '.[]' <<<"$JSON" | while IFS= read -r obj; do
-            envKey=$(jq -r '.envKey // .key // empty' <<<"$obj")
-            val=$(jq -r '.value // empty' <<<"$obj")
-            if [[ -n "$envKey" && -n "$val" ]]; then
-              echo "$envKey=$val" >> "$GITHUB_ENV"
-            fi
-          done
-      - name: Build service
-        env:
-          ARM_USE_OIDC: true
-          ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
-          ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
-          ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-        run: |
-          [ -f "${HOME}/.config/gcloud/application_default_credentials.json" ] || mkdir -p ${HOME}/.config/gcloud && touch "${HOME}/.config/gcloud/application_default_credentials.json"
-          echo "Building service: ${{ matrix.service.name }}"
-          echo "Service path: ${{ matrix.service.path }}"
-          cd "${{ matrix.service.path }}"
-          if [ -f "Makefile" ]; then
-            make build
-          else
-            echo "No Makefile found in ${{ matrix.service.path }}"
-          fi
-          echo ${{ github.ref_name == 'main' }}
-          echo ${{ github.ref_name }}
-      - name: Create tarball for artifacts
-        if: ${{ matrix.service.artifact != '' }}
-        run: tar -czf ${{ matrix.service.artifact }}.tar -C ${{ matrix.service.artifact_path }} .
-      - name: Save service artifacts
-        if: ${{ matrix.service.artifact != '' }}
-        uses: actions/upload-artifact@v4
-        with:
-          name: ${{ matrix.service.artifact }}
-          path: ${{ matrix.service.artifact }}.tar
-
-      - name: Test service
-        run: |
-          echo "Testing service: ${{ matrix.service.name }}"
-          cd "${{ matrix.service.path }}"
-          if [ -f "Makefile" ]; then
-            make test
-          else
-            echo "No Makefile found for testing in ${{ matrix.service.path }}"
-          fi
+    
   publish_services:
     needs: [setup, build_services]
     runs-on: ubuntu-latest
