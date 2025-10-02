@@ -33,6 +33,10 @@ on:
         type: string
         required: false
         default: ''
+      artifact_load:
+        type: string
+        required: false
+        default: ''
       git_branch:
         type: string
         required: true
@@ -132,6 +136,13 @@ jobs:
               echo "$envKey=$val" >> "$GITHUB_ENV"
             fi
           done
+      - uses: actions/download-artifact@v5
+        if: ${{ inputs.artifact_load != '' }}
+        with:
+          name: ${{ inputs.artifact_load }}
+      - name: untar artifact
+        if: ${{ inputs.artifact_load != '' }}
+        run: mkdir -p ${{ inputs.artifact_path }} && tar --no-same-owner -xzf ${{ inputs.artifact_load }}.tar -C ${{ inputs.artifact_path }}
       - name: ${{ inputs.target }} service
         env:
           ARM_USE_OIDC: true
