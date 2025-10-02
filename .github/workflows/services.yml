@@ -28,7 +28,7 @@ jobs:
       services: ${{ steps.set-services.outputs.services }}
       infra: ${{ steps.set-services.outputs.infra }}
       docker: ${{ steps.set-services.outputs.docker }}
-      git_banch: ${{ steps.set-services.outputs.GIT_BRANCH }}
+      git_branch: ${{ steps.set-services.outputs.GIT_BRANCH }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v5
@@ -139,7 +139,7 @@ jobs:
         run: |
           echo "Saving data to GCS: ${{ matrix.service.name }}"
           echo '${{ toJson(matrix.service.save) }}' > state.json
-          gcloud storage cp state.json gs://${{ secrets.GCP_BUCKET_NAME }}/${{ matrix.service.name }}/${{ needs.setup.outputs.git_banch }}.json
+          gcloud storage cp state.json gs://${{ secrets.GCP_BUCKET_NAME }}/${{ matrix.service.name }}/${{ needs.setup.outputs.git_branch }}.json
   build_services:
     needs: [setup, publish_docker]
     container:
@@ -198,10 +198,25 @@ jobs:
     needs: [setup, publish_docker]
     uses: ./.github/workflows/service.yml
     with:
-      service: ${{ matrix.service }}
+      name: ${{ matrix.service.name }}
+      path: ${{ matrix.service.path }}
+      artifact: ${{ matrix.service.artifact }}
+      artifact_path: ${{ matrix.service.artifact_path }}
+      git_branch: ${{ needs.setup.outputs.git_branch }}
+      save: ${{ matrix.service.save }}
+      load: ${{ matrix.service.load }}
+      authentication_azure: ${{ matrix.service.authentication.azure }}
+      authentication_gcp: ${{ matrix.service.authentication.gcp }}
       target: build
     secrets:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+      GCP_WORKLOAD_IDENTITY_PROVIDER: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+      GCP_SERVICE_ACCOUNT: ${{ secrets.GCP_SERVICE_ACCOUNT }}
+      GCP_BUCKET_NAME: ${{ secrets.GCP_BUCKET_NAME }}
+      AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+      AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+      AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
     if: ${{ always() && needs.setup.outputs.infra != '[]' && (needs.publish_docker.result == 'success' || needs.publish_docker.result == 'skipped' ) }}
     strategy:
       fail-fast: false
@@ -286,7 +301,7 @@ jobs:
         if: ${{ matrix.service.load != '' }}
         shell: bash
         run: |
-          path="gs://${{ secrets.GCP_BUCKET_NAME }}/${{ matrix.service.load }}/${{ needs.setup.outputs.git_banch }}.json"
+          path="gs://${{ secrets.GCP_BUCKET_NAME }}/${{ matrix.service.load }}/${{ needs.setup.outputs.git_branch }}.json"
           fallback="gs://${{ secrets.GCP_BUCKET_NAME }}/${{ matrix.service.load }}/main.json"
           if gcloud storage objects list "$path"; then
             JSON=$(gcloud storage cat "$path")
