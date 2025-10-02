@@ -33,6 +33,10 @@ on:
         type: string
         required: false
         default: ''
+      artifact_tar:
+        type: boolean
+        required: false
+        default: false
       artifact_load:
         type: string
         required: false
@@ -141,7 +145,7 @@ jobs:
         with:
           name: ${{ inputs.artifact_load }}
       - name: untar artifact
-        if: ${{ inputs.artifact_load != '' }}
+        if: ${{ inputs.artifact_tar }}
         run: mkdir -p ${{ inputs.artifact_path }} && tar --no-same-owner -xzf ${{ inputs.artifact_load }}.tar -C ${{ inputs.artifact_path }}
       - name: ${{ inputs.target }} service
         env:
@@ -160,14 +164,14 @@ jobs:
             echo "No Makefile found in ${{ inputs.path }}"
           fi
       - name: Create tarball for artifacts
-        if: ${{ inputs.artifact != '' }}
+        if: ${{ inputs.artifact_tar }}
         run: tar -czf ${{ inputs.artifact }}.tar -C ${{ inputs.artifact_path }} .
       - name: Save service artifacts
         if: ${{ inputs.artifact != '' }}
         uses: actions/upload-artifact@v4
         with:
           name: ${{ inputs.artifact }}
-          path: ${{ inputs.artifact }}.tar
+          path: ${{ inputs.artifact_path }}
 
       - name: Test service
         if: ${{ inputs.run_tests }}
