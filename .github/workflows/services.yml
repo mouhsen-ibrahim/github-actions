@@ -197,7 +197,7 @@ jobs:
       AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
       AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
       AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-    #if: ${{ always() && github.ref_name == 'main' && needs.build_services.result == 'success' }}
+    if: ${{ always() && github.ref_name == 'main' && needs.build_services.result == 'success' }}
     strategy:
       fail-fast: false
       matrix:
@@ -224,7 +224,7 @@ jobs:
       AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
       AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
       AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-    #if: ${{ always() && github.ref_name == 'main' && needs.build_infra.result == 'success' }}
+    if: ${{ always() && github.ref_name == 'main' && needs.build_infra.result == 'success' }}
     strategy:
       matrix:
         service: ${{ fromJson(needs.setup.outputs.infra) }}
@@ -250,7 +250,7 @@ jobs:
       AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
       AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
       AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-    #if: ${{ always() && github.ref_name == 'main' && needs.deploy_infra.result == 'success' && needs.publish_services.result == 'success' }}
+    if: ${{ always() && github.ref_name == 'main' && needs.deploy_infra.result == 'success' && needs.publish_services.result == 'success' }}
     strategy:
       matrix:
         service: ${{ fromJson(needs.setup.outputs.services) }}
