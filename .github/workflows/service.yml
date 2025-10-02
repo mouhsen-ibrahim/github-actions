@@ -165,10 +165,10 @@ jobs:
             echo "No Makefile found in ${{ inputs.path }}"
           fi
       - name: Create tarball for artifacts
-        if: ${{ inputs.artifact_tar }}
+        if: ${{ inputs.artifact_tar && inputs.target == 'build' }}
         run: tar -czf ${{ inputs.artifact }}.tar -C ${{ inputs.artifact_path }} .
       - name: Save service artifacts
-        if: ${{ inputs.artifact != '' }}
+        if: ${{ inputs.artifact != '' && inputs.target == 'build' }}
         uses: actions/upload-artifact@v4
         with:
           name: ${{ inputs.artifact }}
