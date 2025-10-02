@@ -94,7 +94,7 @@ jobs:
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
       - name: Login to GCP
         uses: google-github-actions/auth@v3
-        if: ${{ inputs.authentication_gcp || inputs.load != '' }}
+        if: ${{ inputs.authentication_gcp || inputs.load != '' || inputs.save != '' }}
         with:
           project_id: ${{ secrets.GCP_PROJECT_ID }}
           workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
