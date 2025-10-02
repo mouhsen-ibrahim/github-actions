@@ -90,110 +90,59 @@ jobs:
           fi
   publish_docker:
     needs: setup
-    runs-on: ubuntu-latest
+    uses: ./.github/workflows/service.yml
+    with:
+      name: ${{ matrix.service.name }}
+      path: ${{ matrix.service.path }}
+      artifact: ${{ matrix.service.artifact }}
+      artifact_path: ${{ matrix.service.artifact_path }}
+      git_branch: ${{ needs.setup.outputs.git_branch }}
+      save: ${{ matrix.service.save }}
+      load: ${{ matrix.service.load }}
+      authentication_azure: ${{ matrix.service.authentication.azure == 'enabled' }}
+      authentication_gcp: ${{ matrix.service.authentication.gcp == 'enabled' }}
+      target: publish
+    secrets:
+      GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+      GCP_WORKLOAD_IDENTITY_PROVIDER: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+      GCP_SERVICE_ACCOUNT: ${{ secrets.GCP_SERVICE_ACCOUNT }}
+      GCP_BUCKET_NAME: ${{ secrets.GCP_BUCKET_NAME }}
+      AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+      AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+      AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
     strategy:
       fail-fast: false
       matrix:
         service: ${{ fromJson(needs.setup.outputs.docker) }}
     if: ${{ needs.setup.outputs.docker != '[]' }}
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-      - name: get docker registry
-        id: get_docker_registry
-        run: |
-          echo "Getting docker registry"
-          echo "DOCKER_REGISTRY=$(cat Makefile.variables | grep -oP 'DOCKER_REGISTRY=\K[^ ]+')" >> $GITHUB_OUTPUT
-
-      - name: Log in to GHCR
-        uses: docker/login-action@v3
-        with:
-          registry: ${{ steps.get_docker_registry.outputs.DOCKER_REGISTRY }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Build and publish docker image
-        run: |
-          echo "Publishing docker: ${{ matrix.service.name }}"
-          echo "docker path: ${{ matrix.service.path }}"
-          cd "${{ matrix.service.path }}"
-          if [ -f "Makefile" ]; then
-            make publish
-          else
-            echo "No Makefile found in ${{ matrix.service.path }}"
-          fi
-      - name: Login to GCP
-        if: ${{ matrix.service.save != '' }}
-        uses: google-github-actions/auth@v3
-        with:
-          project_id: ${{ secrets.GCP_PROJECT_ID }}
-          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
-          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
-          create_credentials_file: true
-          export_environment_variables: true
-          token_format: access_token
-      - name: Save data to GCS
-        if: ${{ matrix.service.save != '' }}
-        run: |
-          echo "Saving data to GCS: ${{ matrix.service.name }}"
-          echo '${{ toJson(matrix.service.save) }}' > state.json
-          gcloud storage cp state.json gs://${{ secrets.GCP_BUCKET_NAME }}/${{ matrix.service.name }}/${{ needs.setup.outputs.git_branch }}.json
   build_services:
     needs: [setup, publish_docker]
-    container:
-      image: ${{ matrix.service.image }}
-    runs-on: ubuntu-latest
+    uses: ./.github/workflows/service.yml
+    with:
+      name: ${{ matrix.service.name }}
+      path: ${{ matrix.service.path }}
+      artifact: ${{ matrix.service.artifact }}
+      artifact_path: ${{ matrix.service.artifact_path }}
+      git_branch: ${{ needs.setup.outputs.git_branch }}
+      save: ${{ matrix.service.save }}
+      load: ${{ matrix.service.load }}
+      authentication_azure: ${{ matrix.service.authentication.azure == 'enabled' }}
+      authentication_gcp: ${{ matrix.service.authentication.gcp == 'enabled' }}
+      target: build
+      run_tests: true
+    secrets:
+      GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+      GCP_WORKLOAD_IDENTITY_PROVIDER: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+      GCP_SERVICE_ACCOUNT: ${{ secrets.GCP_SERVICE_ACCOUNT }}
+      GCP_BUCKET_NAME: ${{ secrets.GCP_BUCKET_NAME }}
+      AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+      AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+      AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
     if: ${{ always() && needs.setup.outputs.services != '[]' && (needs.publish_docker.result == 'success' || needs.publish_docker.result == 'skipped') }}
     strategy:
       fail-fast: false
       matrix:
         service: ${{ fromJson(needs.setup.outputs.services) }}
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-      - name: get docker registry
-        id: get_docker_registry
-        run: |
-          echo "Getting docker registry"
-          echo "DOCKER_REGISTRY=$(cat Makefile.variables | grep -oP 'DOCKER_REGISTRY=\K[^ ]+')" >> $GITHUB_OUTPUT
-
-      - name: Log in to GHCR
-        uses: docker/login-action@v3
-        with:
-          registry: ${{ steps.get_docker_registry.outputs.DOCKER_REGISTRY }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Build service
-        run: |
-          echo "Building service: ${{ matrix.service.name }}"
-          echo "Service path: ${{ matrix.service.path }}"
-          cd "${{ matrix.service.path }}"
-          if [ -f "Makefile" ]; then
-            make build
-          else
-            echo "No Makefile found in ${{ matrix.service.path }}"
-          fi
-      - name: Save service artifacts
-        if: ${{ matrix.service.artifact != '' }}
-        uses: actions/upload-artifact@v4
-        with:
-          name: ${{ matrix.service.artifact }}
-          path: ${{ matrix.service.artifact_path }}
-
-      - name: Test service
-        run: |
-          echo "Testing service: ${{ matrix.service.name }}"
-          cd "${{ matrix.service.path }}"
-          if [ -f "Makefile" ]; then
-            make test
-          else
-            echo "No Makefile found for testing in ${{ matrix.service.path }}"
-          fi
   build_infra:
     needs: [setup, publish_docker]
     uses: ./.github/workflows/service.yml
@@ -224,133 +173,80 @@ jobs:
     
   publish_services:
     needs: [setup, build_services]
-    runs-on: ubuntu-latest
+    uses: ./.github/workflows/service.yml
+    with:
+      name: ${{ matrix.service.name }}
+      path: ${{ matrix.service.path }}
+      artifact: ${{ matrix.service.artifact }}
+      artifact_path: ${{ matrix.service.artifact_path }}
+      git_branch: ${{ needs.setup.outputs.git_branch }}
+      save: ${{ matrix.service.save }}
+      load: ${{ matrix.service.load }}
+      authentication_azure: ${{ matrix.service.authentication.azure == 'enabled' }}
+      authentication_gcp: ${{ matrix.service.authentication.gcp == 'enabled' }}
+      target: publish
+    secrets:
+      GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+      GCP_WORKLOAD_IDENTITY_PROVIDER: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+      GCP_SERVICE_ACCOUNT: ${{ secrets.GCP_SERVICE_ACCOUNT }}
+      GCP_BUCKET_NAME: ${{ secrets.GCP_BUCKET_NAME }}
+      AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+      AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+      AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
     if: ${{ always() && github.ref_name == 'main' && needs.build_services.result == 'success' }}
     strategy:
       fail-fast: false
       matrix:
         service: ${{ fromJson(needs.setup.outputs.services) }}
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-      - uses: actions/download-artifact@v5
-        if: ${{ matrix.service.artifact_load != '' }}
-        with:
-          name: ${{ matrix.service.artifact_load }}
-          path: "${{ matrix.service.artifact_path }}"
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-      - name: get docker registry
-        id: get_docker_registry
-        run: |
-          echo "Getting docker registry"
-          echo "DOCKER_REGISTRY=$(cat Makefile.variables | grep -oP 'DOCKER_REGISTRY=\K[^ ]+')" >> $GITHUB_OUTPUT
-
-      - name: Log in to GHCR
-        uses: docker/login-action@v3
-        with:
-          registry: ${{ steps.get_docker_registry.outputs.DOCKER_REGISTRY }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-      - name: Publish service
-        run: |
-          echo "Publishing service: ${{ matrix.service.name }}"
-          cd "${{ matrix.service.path }}"
-          if [ -f "Makefile" ]; then
-            make publish
-          else
-            echo "No Makefile found for publishing in ${{ matrix.service.path }}"
-          fi
   deploy_infra:
     needs: [setup, build_infra]
-    runs-on: ubuntu-latest
+    uses: ./.github/workflows/service.yml
+    with:
+      name: ${{ matrix.service.name }}
+      path: ${{ matrix.service.path }}
+      artifact: ${{ matrix.service.artifact }}
+      artifact_path: ${{ matrix.service.artifact_path }}
+      git_branch: ${{ needs.setup.outputs.git_branch }}
+      save: ${{ matrix.service.save }}
+      load: ${{ matrix.service.load }}
+      authentication_azure: ${{ matrix.service.authentication.azure == 'enabled' }}
+      authentication_gcp: ${{ matrix.service.authentication.gcp == 'enabled' }}
+      target: deploy
+    secrets:
+      GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+      GCP_WORKLOAD_IDENTITY_PROVIDER: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+      GCP_SERVICE_ACCOUNT: ${{ secrets.GCP_SERVICE_ACCOUNT }}
+      GCP_BUCKET_NAME: ${{ secrets.GCP_BUCKET_NAME }}
+      AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+      AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+      AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
     if: ${{ always() && github.ref_name == 'main' && needs.build_infra.result == 'success' }}
     strategy:
       matrix:
         service: ${{ fromJson(needs.setup.outputs.infra) }}
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-      - uses: actions/download-artifact@v5
-        if: ${{ matrix.service.artifact_load != '' }}
-        with:
-          name: ${{ matrix.service.artifact_load }}
-      - name: untar artifact
-        if: ${{ matrix.service.artifact_load != '' }}
-        run: mkdir -p ${{ matrix.service.artifact_path }} && tar --no-same-owner -xzf ${{ matrix.service.artifact_load }}.tar -C ${{ matrix.service.artifact_path }}
-      - name: Azure Login with OIDC
-        if: ${{ matrix.service.authentication.azure == 'enabled' }}
-        uses: azure/login@v2
-        with:
-          client-id: ${{ secrets.AZURE_CLIENT_ID }}
-          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-      - name: Login to GCP
-        if: ${{ matrix.service.authentication.gcp == 'enabled' || matrix.service.load != '' }}
-        uses: google-github-actions/auth@v3
-        with:
-          project_id: ${{ secrets.GCP_PROJECT_ID }}
-          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
-          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
-          create_credentials_file: true
-          export_environment_variables: true
-          token_format: access_token
-      - name: load state
-        id: state
-        if: ${{ matrix.service.load != '' }}
-        shell: bash
-        run: |
-          path="gs://${{ secrets.GCP_BUCKET_NAME }}/${{ matrix.service.load }}/${{ needs.setup.outputs.git_branch }}.json"
-          fallback="gs://${{ secrets.GCP_BUCKET_NAME }}/${{ matrix.service.load }}/main.json"
-          if gcloud storage objects list "$path"; then
-            JSON=$(gcloud storage cat "$path")
-            echo "Using branch state: $path"
-          elif gcloud storage objects list "$fallback"; then
-            JSON=$(gcloud storage cat "$fallback")
-            echo "Branch state missing; using fallback: $fallback"
-          else
-            echo "No state found for branch or main."
-            exit 0
-          fi
-          jq -c '.[]' <<<"$JSON" | while IFS= read -r obj; do
-            envKey=$(jq -r '.envKey // .key // empty' <<<"$obj")
-            val=$(jq -r '.value // empty' <<<"$obj")
-            if [[ -n "$envKey" && -n "$val" ]]; then
-              echo "$envKey=$val" >> "$GITHUB_ENV"
-            fi
-          done
-      - name: Deploy service
-        env:
-          ARM_USE_OIDC: true
-          ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
-          ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
-          ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-        run: |
-          echo "Deploying service: ${{ matrix.service.name }}"
-          [ -f "${HOME}/.config/gcloud/application_default_credentials.json" ] || mkdir -p ${HOME}/.config/gcloud && touch "${HOME}/.config/gcloud/application_default_credentials.json"
-          cd "${{ matrix.service.path }}"
-          if [ -f "Makefile" ]; then
-            make deploy
-          else
-            echo "No Makefile found for deployment in ${{ matrix.service.path }}"
-          fi
   deploy_services:
     needs: [setup, deploy_infra, publish_services]
-    runs-on: ubuntu-latest
+    uses: ./.github/workflows/service.yml
+    with:
+      name: ${{ matrix.service.name }}
+      path: ${{ matrix.service.path }}
+      artifact: ${{ matrix.service.artifact }}
+      artifact_path: ${{ matrix.service.artifact_path }}
+      git_branch: ${{ needs.setup.outputs.git_branch }}
+      save: ${{ matrix.service.save }}
+      load: ${{ matrix.service.load }}
+      authentication_azure: ${{ matrix.service.authentication.azure == 'enabled' }}
+      authentication_gcp: ${{ matrix.service.authentication.gcp == 'enabled' }}
+      target: deploy
+    secrets:
+      GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+      GCP_WORKLOAD_IDENTITY_PROVIDER: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+      GCP_SERVICE_ACCOUNT: ${{ secrets.GCP_SERVICE_ACCOUNT }}
+      GCP_BUCKET_NAME: ${{ secrets.GCP_BUCKET_NAME }}
+      AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+      AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+      AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
     if: ${{ always() && github.ref_name == 'main' && needs.deploy_infra.result == 'success' && needs.publish_services.result == 'success' }}
     strategy:
       matrix:
         service: ${{ fromJson(needs.setup.outputs.services) }}
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Deploy service
-        run: |
-          echo "Deploying service: ${{ matrix.service.name }}"
-          cd "${{ matrix.service.path }}"
-          if [ -f "Makefile" ]; then
-            make deploy
-          else
-            echo "No Makefile found for deployment in ${{ matrix.service.path }}"
-          fi
