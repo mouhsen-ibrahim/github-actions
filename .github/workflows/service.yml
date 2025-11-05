@@ -3,6 +3,9 @@ name: Reusable service workflow
 on:
   workflow_call:
     inputs:
+      service:
+        type: string
+        required: true
       name:
         type: string
         required: true
@@ -78,7 +81,7 @@ permissions:
 
 jobs:
   build:
-    name: ${{ inputs.target }}-${{ inputs.name }}-${{ inputs.env }}
+    name: ${{ inputs.target }}-${{ fromJson(inputs.service).name }}-${{ inputs.env }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code

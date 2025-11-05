@@ -96,6 +96,7 @@ jobs:
     uses: ./.github/workflows/service.yml
     with:
       name: ${{ matrix.service.name }}
+      service: ${{ matrix.service }}
       path: ${{ matrix.service.path }}
       artifact: ${{ matrix.service.artifact }}
       artifact_path: ${{ matrix.service.artifact_path }}
@@ -126,6 +127,7 @@ jobs:
     uses: ./.github/workflows/service.yml
     with:
       name: ${{ matrix.service.name }}
+      service: ${{ matrix.service }}
       path: ${{ matrix.service.path }}
       artifact: ${{ matrix.service.artifact }}
       artifact_path: ${{ matrix.service.artifact_path }}
@@ -156,6 +158,7 @@ jobs:
     uses: ./.github/workflows/service.yml
     with:
       name: ${{ matrix.service.name }}
+      service: ${{ matrix.service }}
       path: ${{ matrix.service.path }}
       artifact: ${{ matrix.service.artifact }}
       artifact_path: ${{ matrix.service.artifact_path }}
@@ -187,6 +190,7 @@ jobs:
     uses: ./.github/workflows/service.yml
     with:
       name: ${{ matrix.service.name }}
+      service: ${{ matrix.service }}
       path: ${{ matrix.service.path }}
       artifact: ${{ matrix.service.artifact }}
       artifact_path: ${{ matrix.service.artifact_path }}
@@ -218,6 +222,7 @@ jobs:
     uses: ./.github/workflows/service.yml
     with:
       name: ${{ matrix.service.name }}
+      service: ${{ matrix.service }}
       path: ${{ matrix.service.path }}
       artifact: ${{ matrix.service.artifact }}
       artifact_path: ${{ matrix.service.artifact_path }}
@@ -246,6 +251,7 @@ jobs:
     uses: ./.github/workflows/service.yml
     with:
       name: ${{ matrix.service.name }}
+      service: ${{ matrix.service }}
       path: ${{ matrix.service.path }}
       artifact: ${{ matrix.service.artifact }}
       artifact_path: ${{ matrix.service.artifact_path }}
