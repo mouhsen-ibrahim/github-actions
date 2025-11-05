@@ -106,7 +106,7 @@ jobs:
       authentication_gcp: ${{ matrix.service.authentication.gcp == 'enabled' }}
       target: publish
       run_tests: false
-      env: ${{ matrix.service.env }}
+      env: ${{ matrix.env }}
     secrets:
       GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
       GCP_WORKLOAD_IDENTITY_PROVIDER: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
@@ -136,7 +136,7 @@ jobs:
       authentication_gcp: ${{ matrix.service.authentication.gcp == 'enabled' }}
       target: build
       run_tests: true
-      env: ${{ matrix.service.env }}
+      env: ${{ matrix.env }}
     secrets:
       GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
       GCP_WORKLOAD_IDENTITY_PROVIDER: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
@@ -166,7 +166,7 @@ jobs:
       authentication_azure: ${{ matrix.service.authentication.azure == 'enabled' }}
       authentication_gcp: ${{ matrix.service.authentication.gcp == 'enabled' }}
       target: build
-      env: ${{ matrix.service.env }}
+      env: ${{ matrix.env }}
     secrets:
       GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
       GCP_WORKLOAD_IDENTITY_PROVIDER: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
@@ -198,7 +198,7 @@ jobs:
       authentication_azure: ${{ matrix.service.authentication.azure == 'enabled' }}
       authentication_gcp: ${{ matrix.service.authentication.gcp == 'enabled' }}
       target: publish
-      env: ${{ matrix.service.env }}
+      env: ${{ matrix.env }}
     secrets:
       GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
       GCP_WORKLOAD_IDENTITY_PROVIDER: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
@@ -227,7 +227,7 @@ jobs:
       authentication_azure: ${{ matrix.service.authentication.azure == 'enabled' }}
       authentication_gcp: ${{ matrix.service.authentication.gcp == 'enabled' }}
       target: deploy
-      env: ${{ matrix.service.env }}
+      env: ${{ matrix.env }}
     secrets:
       GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
       GCP_WORKLOAD_IDENTITY_PROVIDER: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
@@ -255,7 +255,7 @@ jobs:
       authentication_azure: ${{ matrix.service.authentication.azure == 'enabled' }}
       authentication_gcp: ${{ matrix.service.authentication.gcp == 'enabled' }}
       target: deploy
-      env: ${{ matrix.service.env }}
+      env: ${{ matrix.env }}
     secrets:
       GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
       GCP_WORKLOAD_IDENTITY_PROVIDER: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
