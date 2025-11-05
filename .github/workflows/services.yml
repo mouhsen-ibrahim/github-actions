@@ -95,16 +95,8 @@ jobs:
     needs: setup
     uses: ./.github/workflows/service.yml
     with:
-      name: ${{ matrix.service.name }}
       service: ${{ toJson(matrix.service) }}
-      path: ${{ matrix.service.path }}
-      artifact: ${{ matrix.service.artifact }}
-      artifact_path: ${{ matrix.service.artifact_path }}
       git_branch: ${{ needs.setup.outputs.git_branch }}
-      save: ${{ toJson(matrix.service.save) }}
-      load: ${{ matrix.service.load }}
-      authentication_azure: ${{ matrix.service.authentication.azure == 'enabled' }}
-      authentication_gcp: ${{ matrix.service.authentication.gcp == 'enabled' }}
       target: publish
       run_tests: false
       env: ${{ matrix.env }}
@@ -126,16 +118,8 @@ jobs:
     needs: [setup, publish_docker]
     uses: ./.github/workflows/service.yml
     with:
-      name: ${{ matrix.service.name }}
       service: ${{ matrix.service }}
-      path: ${{ matrix.service.path }}
-      artifact: ${{ matrix.service.artifact }}
-      artifact_path: ${{ matrix.service.artifact_path }}
       git_branch: ${{ needs.setup.outputs.git_branch }}
-      save: ${{ toJson(matrix.service.save) }}
-      load: ${{ matrix.service.load }}
-      authentication_azure: ${{ matrix.service.authentication.azure == 'enabled' }}
-      authentication_gcp: ${{ matrix.service.authentication.gcp == 'enabled' }}
       target: build
       run_tests: true
       env: ${{ matrix.env }}
@@ -157,17 +141,9 @@ jobs:
     needs: [setup, publish_docker]
     uses: ./.github/workflows/service.yml
     with:
-      name: ${{ matrix.service.name }}
       service: ${{ matrix.service }}
-      path: ${{ matrix.service.path }}
-      artifact: ${{ matrix.service.artifact }}
-      artifact_path: ${{ matrix.service.artifact_path }}
       artifact_tar: true
       git_branch: ${{ needs.setup.outputs.git_branch }}
-      save: ${{ toJson(matrix.service.save) }}
-      load: ${{ matrix.service.load }}
-      authentication_azure: ${{ matrix.service.authentication.azure == 'enabled' }}
-      authentication_gcp: ${{ matrix.service.authentication.gcp == 'enabled' }}
       target: build
       env: ${{ matrix.env }}
     secrets:
@@ -189,18 +165,9 @@ jobs:
     needs: [setup, build_services]
     uses: ./.github/workflows/service.yml
     with:
-      name: ${{ matrix.service.name }}
       service: ${{ matrix.service }}
-      path: ${{ matrix.service.path }}
-      artifact: ${{ matrix.service.artifact }}
-      artifact_path: ${{ matrix.service.artifact_path }}
-      artifact_load: ${{ matrix.service.artifact_load }}
       artifact_tar: false
       git_branch: ${{ needs.setup.outputs.git_branch }}
-      save: ${{ toJson(matrix.service.save) }}
-      load: ${{ matrix.service.load }}
-      authentication_azure: ${{ matrix.service.authentication.azure == 'enabled' }}
-      authentication_gcp: ${{ matrix.service.authentication.gcp == 'enabled' }}
       target: publish
       env: ${{ matrix.env }}
     secrets:
@@ -221,16 +188,8 @@ jobs:
     needs: [setup, build_infra]
     uses: ./.github/workflows/service.yml
     with:
-      name: ${{ matrix.service.name }}
       service: ${{ matrix.service }}
-      path: ${{ matrix.service.path }}
-      artifact: ${{ matrix.service.artifact }}
-      artifact_path: ${{ matrix.service.artifact_path }}
       git_branch: ${{ needs.setup.outputs.git_branch }}
-      save: ${{ toJson(matrix.service.save) }}
-      load: ${{ matrix.service.load }}
-      authentication_azure: ${{ matrix.service.authentication.azure == 'enabled' }}
-      authentication_gcp: ${{ matrix.service.authentication.gcp == 'enabled' }}
       target: deploy
       env: ${{ matrix.env }}
     secrets:
@@ -250,16 +209,8 @@ jobs:
     needs: [setup, deploy_infra, publish_services]
     uses: ./.github/workflows/service.yml
     with:
-      name: ${{ matrix.service.name }}
       service: ${{ matrix.service }}
-      path: ${{ matrix.service.path }}
-      artifact: ${{ matrix.service.artifact }}
-      artifact_path: ${{ matrix.service.artifact_path }}
       git_branch: ${{ needs.setup.outputs.git_branch }}
-      save: ${{ toJson(matrix.service.save) }}
-      load: ${{ matrix.service.load }}
-      authentication_azure: ${{ matrix.service.authentication.azure == 'enabled' }}
-      authentication_gcp: ${{ matrix.service.authentication.gcp == 'enabled' }}
       target: deploy
       env: ${{ matrix.env }}
     secrets:

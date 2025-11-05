@@ -6,44 +6,10 @@ on:
       service:
         type: string
         required: true
-      name:
-        type: string
-        required: true
-      path:
-        type: string
-        required: true
-      authentication_azure:
-        type: boolean
-        required: false
-        default: false
-      authentication_gcp:
-        type: boolean
-        required: false
-        default: false
-      load:
-        type: string
-        required: false
-        default: ''
-      save:
-        type: string
-        required: false
-        default: ''
-      artifact:
-        type: string
-        required: false
-        default: ''
-      artifact_path:
-        type: string
-        required: false
-        default: ''
       artifact_tar:
         type: boolean
         required: false
         default: false
-      artifact_load:
-        type: string
-        required: false
-        default: ''
       git_branch:
         type: string
         required: true
@@ -101,7 +67,7 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
       - name: Azure Login with OIDC
-        if: ${{ inputs.authentication_azure }}
+        if: ${{ fromJson(inputs.service).authentication_azure == 'enabled' }}
         uses: azure/login@v2
         with:
           client-id: ${{ secrets.AZURE_CLIENT_ID }}
@@ -109,7 +75,7 @@ jobs:
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
       - name: Login to GCP
         uses: google-github-actions/auth@v3
-        if: ${{ inputs.authentication_gcp || inputs.load != '' || inputs.save != '' }}
+        if: ${{ fromJson(inputs.service).authentication_gcp == 'enabled' || fromJson(inputs.service).load != '' || fromJson(inputs.service).save != '' }}
         with:
           project_id: ${{ secrets.GCP_PROJECT_ID }}
           workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
@@ -118,18 +84,18 @@ jobs:
           export_environment_variables: true
           token_format: access_token
       - name: Save data to GCS
-        if: ${{ inputs.save != '' }}
+        if: ${{ fromJson(inputs.service).save != '' }}
         run: |
-          echo "Saving data to GCS: ${{ inputs.name }}"
-          echo '${{ inputs.save }}' > state.json
-          gcloud storage cp state.json gs://${{ secrets.GCP_BUCKET_NAME }}/${{ inputs.env }}/${{ inputs.name }}/${{ inputs.git_branch }}.json
+          echo "Saving data to GCS: ${{ fromJson(inputs.service).name }}"
+          echo '${{ fromJson(inputs.service).save }}' > state.json
+          gcloud storage cp state.json gs://${{ secrets.GCP_BUCKET_NAME }}/${{ inputs.env }}/${{ fromJson(inputs.service).name }}/${{ inputs.git_branch }}.json
       - name: load state
         id: state
-        if: ${{ inputs.load != '' }}
+        if: ${{ fromJson(inputs.service).load != '' }}
         shell: bash
         run: |
-          path="gs://${{ secrets.GCP_BUCKET_NAME }}/${{ inputs.env }}/${{ inputs.load }}/${{ inputs.git_branch }}.json"
-          fallback="gs://${{ secrets.GCP_BUCKET_NAME }}/${{ inputs.load }}/main.json"
+          path="gs://${{ secrets.GCP_BUCKET_NAME }}/${{ inputs.env }}/${{ fromJson(inputs.service).load }}/${{ inputs.git_branch }}.json"
+          fallback="gs://${{ secrets.GCP_BUCKET_NAME }}/${{ fromJson(inputs.service).load }}/main.json"
           if gcloud storage ls "$path"; then
             JSON=$(gcloud storage cat "$path")
             echo "Using branch state: $path"
@@ -148,13 +114,13 @@ jobs:
             fi
           done
       - uses: actions/download-artifact@v5
-        if: ${{ inputs.artifact_load != '' }}
+        if: ${{ fromJson(inputs.service).artifact_load != '' }}
         with:
-          name: ${{ inputs.artifact_load }}-${{ inputs.env }}
-          path: "${{ inputs.artifact_path }}"
+          name: ${{ fromJson(inputs.service).artifact_load }}-${{ inputs.env }}
+          path: "${{ fromJson(inputs.service).artifact_path }}"
       - name: untar artifact
-        if: ${{ inputs.artifact_tar && inputs.artifact_load != '' }}
-        run: mkdir -p ${{ inputs.artifact_path }} && tar --no-same-owner -xzf ${{ inputs.artifact_load }}-${{ inputs.env }}.tar -C ${{ inputs.artifact_path }}
+        if: ${{ inputs.artifact_tar && fromJson(inputs.service).artifact_load != '' }}
+        run: mkdir -p ${{ fromJson(inputs.service).artifact_path }} && tar --no-same-owner -xzf ${{ fromJson(inputs.service).artifact_load }}-${{ inputs.env }}.tar -C ${{ fromJson(inputs.service).artifact_path }}
       - name: ${{ inputs.target }} service
         env:
           ARM_USE_OIDC: true
@@ -163,31 +129,31 @@ jobs:
           ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
         run: |
           [ -f "${HOME}/.config/gcloud/application_default_credentials.json" ] || mkdir -p ${HOME}/.config/gcloud && touch "${HOME}/.config/gcloud/application_default_credentials.json"
-          echo "${{ inputs.target }}ing service: ${{ inputs.name }}"
-          echo "Service path: ${{ inputs.path }}"
-          cd "${{ inputs.path }}"
+          echo "${{ inputs.target }}ing service: ${{ fromJson(inputs.service).name }}"
+          echo "Service path: ${{ fromJson(inputs.service).path }}"
+          cd "${{ fromJson(inputs.service).path }}"
           if [ -f "Makefile" ]; then
             ENV=${{ inputs.env }} make ${{ inputs.target }}
           else
-            echo "No Makefile found in ${{ inputs.path }}"
+            echo "No Makefile found in ${{ fromJson(inputs.service).path }}"
           fi
       - name: Create tarball for artifacts
-        if: ${{ inputs.artifact_tar && inputs.target == 'build' }}
-        run: tar -czf ${{ inputs.artifact }}.tar -C ${{ inputs.artifact_path }} .
+        if: ${{ fromJson(inputs.service).artifact_tar && inputs.target == 'build' }}
+        run: tar -czf ${{ fromJson(inputs.service).artifact }}.tar -C ${{ fromJson(inputs.service).artifact_path }} .
       - name: Save service artifacts
-        if: ${{ inputs.artifact != '' && inputs.target == 'build' }}
+        if: ${{ fromJson(inputs.service).artifact != '' && inputs.target == 'build' }}
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ inputs.artifact }}-${{ inputs.env }}
-          path: ${{ inputs.artifact_path }}
+          name: ${{ fromJson(inputs.service).artifact }}-${{ inputs.env }}
+          path: ${{ fromJson(inputs.service).artifact_path }}
 
       - name: Test service
         if: ${{ inputs.run_tests }}
         run: |
-          echo "Testing service: ${{ inputs.name }}"
-          cd "${{ inputs.path }}"
+          echo "Testing service: ${{ fromJson(inputs.service).name }}"
+          cd "${{ fromJson(inputs.service).path }}"
           if [ -f "Makefile" ]; then
             ENV=${{ inputs.env }} make test
           else
-            echo "No Makefile found for testing in ${{ inputs.path }}"
+            echo "No Makefile found for testing in ${{ fromJson(inputs.service).path }}"
           fi
