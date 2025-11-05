@@ -78,6 +78,7 @@ permissions:
 
 jobs:
   build:
+    name: ${{ inputs.target }}-${{ inputs.name }}-${{ inputs.env }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -118,13 +119,13 @@ jobs:
         run: |
           echo "Saving data to GCS: ${{ inputs.name }}"
           echo '${{ inputs.save }}' > state.json
-          gcloud storage cp state.json gs://${{ secrets.GCP_BUCKET_NAME }}/${{ inputs.name }}/${{ inputs.git_branch }}.json
+          gcloud storage cp state.json gs://${{ secrets.GCP_BUCKET_NAME }}/${{ inputs.env }}/${{ inputs.name }}/${{ inputs.git_branch }}.json
       - name: load state
         id: state
         if: ${{ inputs.load != '' }}
         shell: bash
         run: |
-          path="gs://${{ secrets.GCP_BUCKET_NAME }}/${{ inputs.load }}/${{ inputs.git_branch }}.json"
+          path="gs://${{ secrets.GCP_BUCKET_NAME }}/${{ inputs.env }}/${{ inputs.load }}/${{ inputs.git_branch }}.json"
           fallback="gs://${{ secrets.GCP_BUCKET_NAME }}/${{ inputs.load }}/main.json"
           if gcloud storage ls "$path"; then
             JSON=$(gcloud storage cat "$path")
@@ -146,11 +147,11 @@ jobs:
       - uses: actions/download-artifact@v5
         if: ${{ inputs.artifact_load != '' }}
         with:
-          name: ${{ inputs.artifact_load }}
+          name: ${{ inputs.artifact_load }}-${{ inputs.env }}
           path: "${{ inputs.artifact_path }}"
       - name: untar artifact
         if: ${{ inputs.artifact_tar && inputs.artifact_load != '' }}
-        run: mkdir -p ${{ inputs.artifact_path }} && tar --no-same-owner -xzf ${{ inputs.artifact_load }}.tar -C ${{ inputs.artifact_path }}
+        run: mkdir -p ${{ inputs.artifact_path }} && tar --no-same-owner -xzf ${{ inputs.artifact_load }}-${{ inputs.env }}.tar -C ${{ inputs.artifact_path }}
       - name: ${{ inputs.target }} service
         env:
           ARM_USE_OIDC: true
@@ -174,7 +175,7 @@ jobs:
         if: ${{ inputs.artifact != '' && inputs.target == 'build' }}
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ inputs.artifact }}
+          name: ${{ inputs.artifact }}-${{ inputs.env }}
           path: ${{ inputs.artifact_path }}
 
       - name: Test service
