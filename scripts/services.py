@@ -178,11 +178,20 @@ def get_last_green_commit(owner: str, repo: str, branch: str, token: str,
         return previous_commit()
     return run.get("head_sha")
 
+def get_envs():
+    with tracer.start_as_current_span("get_envs"):
+        envs = []
+        with open("envs.yaml", "r") as f:
+            data = yaml.safe_load(f)
+            for env in data:
+                envs.append(env.get("name"))
+        return envs
 
 def main():
     with tracer.start_as_current_span("main") as span:
         parser = argparse.ArgumentParser(description='Detect services in the repository')
         parser.add_argument('--all', action='store_true', help='Find all services')
+        parser.add_argument('--envs', action='store_true', help='Get all envs')
         parser.add_argument("--cmp", type=str, help="Compare with a git commit")
         parser.add_argument("--config", type=str, help="Configuration file", default="services.yaml")
         parser.add_argument("--last-green", action="store_true", help="Return changed services since the last green build")
@@ -195,6 +204,9 @@ def main():
         if args.all:
             span.set_attribute("all", True)
             print(detect_services())
+        if args.envs:
+            span.set_attribute("envs", True)
+            print(get_envs())
         if args.cmp:
             span.set_attribute("cmp", args.cmp)
             with open(args.config, "r") as f:
