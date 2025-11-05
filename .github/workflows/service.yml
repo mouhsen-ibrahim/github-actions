@@ -120,7 +120,7 @@ jobs:
           path: "${{ fromJson(inputs.service).artifact_path }}"
       - name: untar artifact
         if: ${{ inputs.artifact_tar && fromJson(inputs.service).artifact_load != '' }}
-        run: mkdir -p ${{ fromJson(inputs.service).artifact_path }} && tar --no-same-owner -xzf ${{ fromJson(inputs.service).artifact_load }}-${{ inputs.env }}.tar -C ${{ fromJson(inputs.service).artifact_path }}
+        run: mkdir -p ${{ fromJson(inputs.service).artifact_path }} && tar --no-same-owner -xzf ${{ fromJson(inputs.service).artifact_load }}.tar -C ${{ fromJson(inputs.service).artifact_path }}
       - name: ${{ inputs.target }} service
         env:
           ARM_USE_OIDC: true
@@ -138,7 +138,7 @@ jobs:
             echo "No Makefile found in ${{ fromJson(inputs.service).path }}"
           fi
       - name: Create tarball for artifacts
-        if: ${{ fromJson(inputs.service).artifact_tar && inputs.target == 'build' }}
+        if: ${{ inputs.artifact_tar && inputs.target == 'build' }}
         run: tar -czf ${{ fromJson(inputs.service).artifact }}.tar -C ${{ fromJson(inputs.service).artifact_path }} .
       - name: Save service artifacts
         if: ${{ fromJson(inputs.service).artifact != '' && inputs.target == 'build' }}
