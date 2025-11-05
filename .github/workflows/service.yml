@@ -51,6 +51,9 @@ on:
         type: boolean
         required: false
         default: true
+      env:
+        type: string
+        required: true
     secrets:
       AZURE_CLIENT_ID:
         required: false
@@ -160,7 +163,7 @@ jobs:
           echo "Service path: ${{ inputs.path }}"
           cd "${{ inputs.path }}"
           if [ -f "Makefile" ]; then
-            make ${{ inputs.target }}
+            ENV=${{ inputs.env }} make ${{ inputs.target }}
           else
             echo "No Makefile found in ${{ inputs.path }}"
           fi
@@ -180,7 +183,7 @@ jobs:
           echo "Testing service: ${{ inputs.name }}"
           cd "${{ inputs.path }}"
           if [ -f "Makefile" ]; then
-            make test
+            ENV=${{ inputs.env }} make test
           else
             echo "No Makefile found for testing in ${{ inputs.path }}"
           fi

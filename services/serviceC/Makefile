@@ -2,6 +2,7 @@ include ../../Makefile.variables
 GOOGLE_APPLICATION_CREDENTIALS ?= ${HOME}/.config/gcloud/application_default_credentials.json
 VERSION    					   ?= $(shell git describe --tags --always --dirty 2>/dev/null || echo dev)
 TF_VERSION    				   ?= $(shell git describe --tags --always --dirty 2>/dev/null || echo dev)
+ENV                            ?= dev
 build:
 	@echo "Building serviceC"
 	@mkdir -p ./terraform-plan
@@ -25,6 +26,6 @@ clean:
 	@echo "Cleaning serviceC"
 
 deploy:
-	@echo "Deploying serviceC"
+	@echo "Deploying serviceC in env ${ENV}"
 	mkdir -p ./terraform-plan
 	docker buildx build --build-context ext=${HOME}/.azure --secret id=gcloud_config,src=${GOOGLE_APPLICATION_CREDENTIALS} --build-arg VERSION=$(TF_VERSION) --build-arg action=apply --build-arg service=services/serviceC -f ${ROOT}/terraform.Dockerfile ${ROOT}
