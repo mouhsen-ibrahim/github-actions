@@ -12,12 +12,11 @@ from opentelemetry import trace
 tracer = trace.get_tracer("github-actions-srvices")
 
 class Service:
-    def __init__(self, path: str, envs : List[str]):
+    def __init__(self, path: str):
         self.path = path
         with open(os.path.join(self.path, "Buildfile.yaml"), 'r') as f:
             self.data = yaml.safe_load(f)
             self.data["path"] = self.path
-            self.data["envs"] = envs
         if "save" in self.data:
             if isinstance(self.data["save"], list):
                 for i, item in enumerate(self.data["save"]):
@@ -60,13 +59,13 @@ def run_git(*args: str, cwd: Optional[str] = None) -> str:
             raise RuntimeError(f"git {' '.join(args)} failed: {msg}") from e
 
 
-def detect_services(envs : List[str]):
+def detect_services():
     with tracer.start_as_current_span("detect_services"):
         services = []
         for root, dirs, files in os.walk('.'):
             for file in files:
                 if file == "Buildfile.yaml":
-                    services.append(Service(root, envs))
+                    services.append(Service(root))
 
         return services
 
@@ -97,8 +96,8 @@ def get_services_by_selector(selector, services) -> List[Service]:
                     ret.append(service)
         return ret
 
-def get_changed_services(changes : List[str], config, envs : List[str]) -> dict[str, List[Service]]:
-    services = detect_services(envs)
+def get_changed_services(changes : List[str], config) -> dict[str, List[Service]]:
+    services = detect_services()
     additional_services = []
     for c in config.get("additional_services", []):
         changed_files = get_triggers(c.get("trigger", {}))
@@ -122,11 +121,11 @@ def get_changed_services(changes : List[str], config, envs : List[str]) -> dict[
         "docker": list(dict.fromkeys(docker_services)),
     }
 
-def compare_services(cmp : str, config, envs : List[str]):
+def compare_services(cmp : str, config):
     with tracer.start_as_current_span("compare_services") as compare_services:
         changes = run_git("diff", "--name-only", cmp)
         compare_services.set_attribute("cmp", cmp)
-        changed_service = get_changed_services(changes.split("\n"), config, envs)
+        changed_service = get_changed_services(changes.split("\n"), config)
         return {
             "services": [service.to_dict() for service in changed_service["services"]],
             "infra": [service.to_dict() for service in changed_service["infra"]],
@@ -192,6 +191,7 @@ def main():
     with tracer.start_as_current_span("main") as span:
         parser = argparse.ArgumentParser(description='Detect services in the repository')
         parser.add_argument('--all', action='store_true', help='Find all services')
+        parser.add_argument('--envs', action='store_true', help='Get all envs')
         parser.add_argument("--cmp", type=str, help="Compare with a git commit")
         parser.add_argument("--config", type=str, help="Configuration file", default="services.yaml")
         parser.add_argument("--last-green", action="store_true", help="Return changed services since the last green build")
@@ -201,15 +201,17 @@ def main():
         parser.add_argument("--workflow", type=str, help="Github workflow name")
         args = parser.parse_args()
 
-        envs = get_envs()
         if args.all:
             span.set_attribute("all", True)
-            print(detect_services(envs))
+            print(detect_services())
+        if args.envs:
+            span.set_attribute("envs", True)
+            print(get_envs())
         if args.cmp:
             span.set_attribute("cmp", args.cmp)
             with open(args.config, "r") as f:
                 config = yaml.safe_load(f)
-                print(json.dumps(compare_services(args.cmp, config, envs)))
+                print(json.dumps(compare_services(args.cmp, config)))
         if args.last_green:
             span.set_attribute("last_green", True)
             if args.branch is None or args.repo is None or args.owner is None:
