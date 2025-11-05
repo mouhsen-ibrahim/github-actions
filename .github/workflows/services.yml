@@ -118,7 +118,7 @@ jobs:
     needs: [setup, publish_docker]
     uses: ./.github/workflows/service.yml
     with:
-      service: ${{ matrix.service }}
+      service: ${{ toJson(matrix.service) }}
       git_branch: ${{ needs.setup.outputs.git_branch }}
       target: build
       run_tests: true
@@ -141,7 +141,7 @@ jobs:
     needs: [setup, publish_docker]
     uses: ./.github/workflows/service.yml
     with:
-      service: ${{ matrix.service }}
+      service: ${{ toJson(matrix.service) }}
       artifact_tar: true
       git_branch: ${{ needs.setup.outputs.git_branch }}
       target: build
@@ -165,7 +165,7 @@ jobs:
     needs: [setup, build_services]
     uses: ./.github/workflows/service.yml
     with:
-      service: ${{ matrix.service }}
+      service: ${{ toJson(matrix.service) }}
       artifact_tar: false
       git_branch: ${{ needs.setup.outputs.git_branch }}
       target: publish
@@ -188,7 +188,7 @@ jobs:
     needs: [setup, build_infra]
     uses: ./.github/workflows/service.yml
     with:
-      service: ${{ matrix.service }}
+      service: ${{ toJson(matrix.service) }}
       git_branch: ${{ needs.setup.outputs.git_branch }}
       target: deploy
       env: ${{ matrix.env }}
@@ -209,7 +209,7 @@ jobs:
     needs: [setup, deploy_infra, publish_services]
     uses: ./.github/workflows/service.yml
     with:
-      service: ${{ matrix.service }}
+      service: ${{ toJson(matrix.service) }}
       git_branch: ${{ needs.setup.outputs.git_branch }}
       target: deploy
       env: ${{ matrix.env }}
