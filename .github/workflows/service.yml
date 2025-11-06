@@ -6,6 +6,10 @@ on:
       service:
         type: string
         required: true
+      artifact_load:
+        type: string
+        required: true
+        default: ''
       artifact_tar:
         type: boolean
         required: false
@@ -114,13 +118,13 @@ jobs:
             fi
           done
       - uses: actions/download-artifact@v5
-        if: ${{ fromJson(inputs.service).artifact_load != '' }}
+        if: ${{ inputs.artifact_load != '' }}
         with:
-          name: ${{ fromJson(inputs.service).artifact_load }}-${{ inputs.env }}
+          name: ${{ inputs.artifact_load }}-${{ inputs.env }}
           path: "${{ fromJson(inputs.service).artifact_path }}"
       - name: untar artifact
-        if: ${{ inputs.artifact_tar && fromJson(inputs.service).artifact_load != '' }}
-        run: mkdir -p ${{ fromJson(inputs.service).artifact_path }} && tar --no-same-owner -xzf ${{ fromJson(inputs.service).artifact_load }}.tar -C ${{ fromJson(inputs.service).artifact_path }}
+        if: ${{ inputs.artifact_tar && inputs.artifact_load != '' }}
+        run: mkdir -p ${{ fromJson(inputs.service).artifact_path }} && tar --no-same-owner -xzf ${{ inputs.artifact_load }}.tar -C ${{ fromJson(inputs.service).artifact_path }}
       - name: ${{ inputs.target }} service
         env:
           ARM_USE_OIDC: true

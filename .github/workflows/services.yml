@@ -96,6 +96,7 @@ jobs:
     uses: ./.github/workflows/service.yml
     with:
       service: ${{ toJson(matrix.service) }}
+      artifact_load: ''
       git_branch: ${{ needs.setup.outputs.git_branch }}
       target: publish
       run_tests: false
@@ -118,6 +119,7 @@ jobs:
     uses: ./.github/workflows/service.yml
     with:
       service: ${{ toJson(matrix.service) }}
+      artifact_load: ''
       git_branch: ${{ needs.setup.outputs.git_branch }}
       target: build
       run_tests: true
@@ -141,6 +143,7 @@ jobs:
     uses: ./.github/workflows/service.yml
     with:
       service: ${{ toJson(matrix.service) }}
+      artifact_load: ''
       artifact_tar: true
       git_branch: ${{ needs.setup.outputs.git_branch }}
       target: build
@@ -165,6 +168,7 @@ jobs:
     uses: ./.github/workflows/service.yml
     with:
       service: ${{ toJson(matrix.service) }}
+      artifact_load: ${{ matrix.service.artifact_load }}
       artifact_tar: false
       git_branch: ${{ needs.setup.outputs.git_branch }}
       target: publish
@@ -188,6 +192,7 @@ jobs:
     uses: ./.github/workflows/service.yml
     with:
       service: ${{ toJson(matrix.service) }}
+      artifact_load: ''
       git_branch: ${{ needs.setup.outputs.git_branch }}
       target: deploy
       env: ${{ matrix.env }}
@@ -209,6 +214,7 @@ jobs:
     uses: ./.github/workflows/service.yml
     with:
       service: ${{ toJson(matrix.service) }}
+      artifact_load: ${{ matrix.service.artifact_load }}
       git_branch: ${{ needs.setup.outputs.git_branch }}
       target: deploy
       env: ${{ matrix.env }}
