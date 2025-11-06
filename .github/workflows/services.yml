@@ -26,6 +26,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       services: ${{ steps.set-services.outputs.services }}
+      envs: ${{ steps.set-services.outputs.envs }}
       infra: ${{ steps.set-services.outputs.infra }}
       docker: ${{ steps.set-services.outputs.docker }}
       git_branch: ${{ steps.set-services.outputs.GIT_BRANCH }}
@@ -76,6 +77,7 @@ jobs:
               last_successful_commit=$(git merge-base HEAD origin/main)
             fi
             services_all=$(opentelemetry-instrument python scripts/services.py --cmp ${last_successful_commit})
+            envs_all=$(opentelemetry-instrument python scripts/services.py --envs)
             services_json=$(echo "$services_all" | jq -c '.services')
             docker_json=$(echo "$services_all" | jq -c '.docker')
             infra_json=$(echo "$services_all" | jq -c '.infra')
@@ -87,22 +89,18 @@ jobs:
             echo "services=${services_json}" >> $GITHUB_OUTPUT
             echo "infra=${infra_json}" >> $GITHUB_OUTPUT
             echo "docker=${docker_json}" >> $GITHUB_OUTPUT
+            echo "envs=${envs_all}" >> $GITHUB_OUTPUT
           fi
   publish_docker:
     needs: setup
     uses: ./.github/workflows/service.yml
     with:
-      name: ${{ matrix.service.name }}
-      path: ${{ matrix.service.path }}
-      artifact: ${{ matrix.service.artifact }}
-      artifact_path: ${{ matrix.service.artifact_path }}
+      service: ${{ toJson(matrix.service) }}
+      artifact_load: ''
       git_branch: ${{ needs.setup.outputs.git_branch }}
-      save: ${{ toJson(matrix.service.save) }}
-      load: ${{ matrix.service.load }}
-      authentication_azure: ${{ matrix.service.authentication.azure == 'enabled' }}
-      authentication_gcp: ${{ matrix.service.authentication.gcp == 'enabled' }}
       target: publish
       run_tests: false
+      env: ${{ matrix.env }}
     secrets:
       GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
       GCP_WORKLOAD_IDENTITY_PROVIDER: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
@@ -115,22 +113,18 @@ jobs:
       fail-fast: false
       matrix:
         service: ${{ fromJson(needs.setup.outputs.docker) }}
+        env: ${{ fromJson(needs.setup.outputs.envs ) }}
     if: ${{ needs.setup.outputs.docker != '[]' }}
   build_services:
     needs: [setup, publish_docker]
     uses: ./.github/workflows/service.yml
     with:
-      name: ${{ matrix.service.name }}
-      path: ${{ matrix.service.path }}
-      artifact: ${{ matrix.service.artifact }}
-      artifact_path: ${{ matrix.service.artifact_path }}
+      service: ${{ toJson(matrix.service) }}
+      artifact_load: ''
       git_branch: ${{ needs.setup.outputs.git_branch }}
-      save: ${{ toJson(matrix.service.save) }}
-      load: ${{ matrix.service.load }}
-      authentication_azure: ${{ matrix.service.authentication.azure == 'enabled' }}
-      authentication_gcp: ${{ matrix.service.authentication.gcp == 'enabled' }}
       target: build
       run_tests: true
+      env: ${{ matrix.env }}
     secrets:
       GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
       GCP_WORKLOAD_IDENTITY_PROVIDER: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
@@ -144,21 +138,17 @@ jobs:
       fail-fast: false
       matrix:
         service: ${{ fromJson(needs.setup.outputs.services) }}
+        env: ${{ fromJson(needs.setup.outputs.envs ) }}
   build_infra:
     needs: [setup, publish_docker]
     uses: ./.github/workflows/service.yml
     with:
-      name: ${{ matrix.service.name }}
-      path: ${{ matrix.service.path }}
-      artifact: ${{ matrix.service.artifact }}
-      artifact_path: ${{ matrix.service.artifact_path }}
+      service: ${{ toJson(matrix.service) }}
+      artifact_load: ''
       artifact_tar: true
       git_branch: ${{ needs.setup.outputs.git_branch }}
-      save: ${{ toJson(matrix.service.save) }}
-      load: ${{ matrix.service.load }}
-      authentication_azure: ${{ matrix.service.authentication.azure == 'enabled' }}
-      authentication_gcp: ${{ matrix.service.authentication.gcp == 'enabled' }}
       target: build
+      env: ${{ matrix.env }}
     secrets:
       GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
       GCP_WORKLOAD_IDENTITY_PROVIDER: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
@@ -172,23 +162,18 @@ jobs:
       fail-fast: false
       matrix:
         service: ${{ fromJson(needs.setup.outputs.infra) }}
+        env: ${{ fromJson(needs.setup.outputs.envs ) }}
     
   publish_services:
     needs: [setup, build_services]
     uses: ./.github/workflows/service.yml
     with:
-      name: ${{ matrix.service.name }}
-      path: ${{ matrix.service.path }}
-      artifact: ${{ matrix.service.artifact }}
-      artifact_path: ${{ matrix.service.artifact_path }}
+      service: ${{ toJson(matrix.service) }}
       artifact_load: ${{ matrix.service.artifact_load }}
       artifact_tar: false
       git_branch: ${{ needs.setup.outputs.git_branch }}
-      save: ${{ toJson(matrix.service.save) }}
-      load: ${{ matrix.service.load }}
-      authentication_azure: ${{ matrix.service.authentication.azure == 'enabled' }}
-      authentication_gcp: ${{ matrix.service.authentication.gcp == 'enabled' }}
       target: publish
+      env: ${{ matrix.env }}
     secrets:
       GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
       GCP_WORKLOAD_IDENTITY_PROVIDER: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
@@ -202,20 +187,16 @@ jobs:
       fail-fast: false
       matrix:
         service: ${{ fromJson(needs.setup.outputs.services) }}
+        env: ${{ fromJson(needs.setup.outputs.envs ) }}
   deploy_infra:
     needs: [setup, build_infra]
     uses: ./.github/workflows/service.yml
     with:
-      name: ${{ matrix.service.name }}
-      path: ${{ matrix.service.path }}
-      artifact: ${{ matrix.service.artifact }}
-      artifact_path: ${{ matrix.service.artifact_path }}
+      service: ${{ toJson(matrix.service) }}
+      artifact_load: ''
       git_branch: ${{ needs.setup.outputs.git_branch }}
-      save: ${{ toJson(matrix.service.save) }}
-      load: ${{ matrix.service.load }}
-      authentication_azure: ${{ matrix.service.authentication.azure == 'enabled' }}
-      authentication_gcp: ${{ matrix.service.authentication.gcp == 'enabled' }}
       target: deploy
+      env: ${{ matrix.env }}
     secrets:
       GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
       GCP_WORKLOAD_IDENTITY_PROVIDER: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
@@ -228,20 +209,16 @@ jobs:
     strategy:
       matrix:
         service: ${{ fromJson(needs.setup.outputs.infra) }}
+        env: ${{ fromJson(needs.setup.outputs.envs ) }}
   deploy_services:
     needs: [setup, deploy_infra, publish_services]
     uses: ./.github/workflows/service.yml
     with:
-      name: ${{ matrix.service.name }}
-      path: ${{ matrix.service.path }}
-      artifact: ${{ matrix.service.artifact }}
-      artifact_path: ${{ matrix.service.artifact_path }}
+      service: ${{ toJson(matrix.service) }}
+      artifact_load: ${{ matrix.service.artifact_load }}
       git_branch: ${{ needs.setup.outputs.git_branch }}
-      save: ${{ toJson(matrix.service.save) }}
-      load: ${{ matrix.service.load }}
-      authentication_azure: ${{ matrix.service.authentication.azure == 'enabled' }}
-      authentication_gcp: ${{ matrix.service.authentication.gcp == 'enabled' }}
       target: deploy
+      env: ${{ matrix.env }}
     secrets:
       GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
       GCP_WORKLOAD_IDENTITY_PROVIDER: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
@@ -254,3 +231,4 @@ jobs:
     strategy:
       matrix:
         service: ${{ fromJson(needs.setup.outputs.services) }}
+        env: ${{ fromJson(needs.setup.outputs.envs ) }}

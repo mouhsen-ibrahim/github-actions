@@ -2,6 +2,7 @@ include ../../Makefile.variables
 VERSION    ?= $(shell git describe --tags --always --dirty 2>/dev/null || echo dev)
 VCS_REF    := $(shell git rev-parse --short=12 HEAD 2>/dev/null || echo unknown)
 BUILD_DATE := $(shell date -u +"%Y-%m-%dT%H:%M:%SZ")
+ENV        ?= dev
 build:
 	@echo "Building serviceB"
 	@docker build --build-arg service=services/serviceB --build-arg VERSION=$(VERSION) --build-arg VCS_REF=$(VCS_REF) --build-arg BUILD_DATE=$(BUILD_DATE) -t ${DOCKER_REGISTRY}/serviceb:${VERSION} -f ${ROOT}/node.Dockerfile ${ROOT}
@@ -22,4 +23,4 @@ clean:
 	@echo "Cleaning serviceB"
 
 deploy:
-	@echo "Deploying serviceB"
+	@echo "Deploying serviceB in env ${ENV}"
