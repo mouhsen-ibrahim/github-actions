@@ -91,7 +91,7 @@ jobs:
         if: ${{ fromJson(inputs.service).save != '' }}
         run: |
           echo "Saving data to GCS: ${{ fromJson(inputs.service).name }}"
-          echo '${{ fromJson(inputs.service).save }}' > state.json
+          echo '${{ toJson(fromJson(inputs.service).save) }}' > state.json
           gcloud storage cp state.json gs://${{ secrets.GCP_BUCKET_NAME }}/${{ inputs.env }}/${{ fromJson(inputs.service).name }}/${{ inputs.git_branch }}.json
       - name: load state
         id: state
