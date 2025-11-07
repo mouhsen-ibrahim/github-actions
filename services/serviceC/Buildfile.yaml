@@ -10,4 +10,4 @@ authentication:
 load: terraform-ci
 dependencies: ["terraform-ci"]
 env:
-  - GCP_PROJECT_ID: github-actions-472416
+  GCP_PROJECT_ID: github-actions-472416
