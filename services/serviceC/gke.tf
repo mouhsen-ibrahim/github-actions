@@ -1,6 +1,7 @@
 variable "project_id" {
   description = "GCP project ID that hosts the GKE cluster"
   type        = string
+  default     = "github-actions-472416"
 }
 
 variable "region" {

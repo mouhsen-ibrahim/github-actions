@@ -1,4 +1,5 @@
 #!/bin/sh
+set -eo
 action="$1"
 
 mkdir -p /tmp/azcfg && cp -a /azcfg/* /tmp/azcfg/
