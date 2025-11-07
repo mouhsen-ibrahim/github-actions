@@ -125,6 +125,14 @@ jobs:
       - name: untar artifact
         if: ${{ inputs.artifact_tar && inputs.artifact_load != '' }}
         run: mkdir -p ${{ fromJson(inputs.service).artifact_path }} && tar --no-same-owner -xzf ${{ inputs.artifact_load }}.tar -C ${{ fromJson(inputs.service).artifact_path }}
+      - name: load env
+        if: ${{ fromJson(inputs.service).env != '' }}
+        env:
+          SERVICE_JSON: ${{ inputs.service }}
+        run: |
+           echo "$SERVICE_JSON" \
+            | jq -r '.env | to_entries[] | "\(.key)=\(.value)"' \
+            >> "$GITHUB_ENV"
       - name: ${{ inputs.target }} service
         env:
           ARM_USE_OIDC: true

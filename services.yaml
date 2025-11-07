@@ -5,6 +5,7 @@ additional_services:
     trigger:
       files:
         - ".github/workflows/services.yml"
+        - ".github/workflows/service.yml"
         - "Makefile.variables"
         - "scripts/services.py"
   - name: go services

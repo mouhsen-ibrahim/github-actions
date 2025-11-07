@@ -1,0 +1,25 @@
+name: Nightly Services
+
+on:
+  schedule:
+    - cron: '0 0 * * *'   # midnight UTC
+  workflow_dispatch: {}   # optional manual reruns
+
+jobs:
+  nightly:
+    uses: ./.github/workflows/service.yml
+    with:
+      service: '{"path":"services/serviceC","name":"serviceA"}'
+      artifact_load: ''
+      git_branch: 'main'
+      target: destroy
+      run_tests: false
+      env: 'dev'
+    secrets:
+      GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+      GCP_WORKLOAD_IDENTITY_PROVIDER: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+      GCP_SERVICE_ACCOUNT: ${{ secrets.GCP_SERVICE_ACCOUNT }}
+      GCP_BUCKET_NAME: ${{ secrets.GCP_BUCKET_NAME }}
+      AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+      AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+      AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
