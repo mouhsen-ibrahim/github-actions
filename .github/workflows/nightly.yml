@@ -4,7 +4,11 @@ on:
   schedule:
     - cron: '0 0 * * *'   # midnight UTC
   workflow_dispatch: {}   # optional manual reruns
-
+permissions:
+  contents: read
+  packages: write
+  id-token: write
+  attestations: write
 jobs:
   nightly:
     uses: ./.github/workflows/service.yml
