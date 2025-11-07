@@ -29,3 +29,8 @@ deploy:
 	@echo "Deploying serviceC in env ${ENV}"
 	mkdir -p ./terraform-plan
 	docker buildx build --build-arg TF_VAR_project_id=$(GCP_PROJECT_ID) --build-context ext=${HOME}/.azure --secret id=gcloud_config,src=${GOOGLE_APPLICATION_CREDENTIALS} --build-arg VERSION=$(TF_VERSION) --build-arg action=apply --build-arg service=services/serviceC -f ${ROOT}/terraform.Dockerfile ${ROOT}
+
+destroy:
+	@echo "Destroying serviceC in env ${ENV}"
+	mkdir -p ./terraform-plan
+	docker buildx build --build-arg TF_VAR_project_id=$(GCP_PROJECT_ID) --build-context ext=${HOME}/.azure --secret id=gcloud_config,src=${GOOGLE_APPLICATION_CREDENTIALS} --build-arg VERSION=$(TF_VERSION) --build-arg action=destroy --build-arg service=services/serviceC -f ${ROOT}/terraform.Dockerfile ${ROOT}

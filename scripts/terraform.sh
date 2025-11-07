@@ -18,6 +18,10 @@ elif [ "${action}" = "apply" ]; then
     terraform init -lockfile=readonly -input=false
     terraform apply -input=false -auto-approve /terraform/plan.out
     echo '\n--- Apply completed ---\n';
+elif [ "${action}" = "destroy" ]; then
+    terraform init -lockfile=readonly -input=false
+    terraform destroy -input=false -auto-approve
+    echo '\n--- Destroy completed ---\n';
 else \
     echo "Unsupported action: ${action}" && exit 1;
 fi;
