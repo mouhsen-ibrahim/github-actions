@@ -130,7 +130,7 @@ jobs:
         env:
           ENVS_JSON: ${{ fromJson(inputs.service) }}
         run: |
-           echo "$ENVS_JSON" | to_entries[] | "\(.key)=\(.value)"' >> $GITHUB_ENV
+           echo "$ENVS_JSON" | jq -r '.env | to_entries[] | "\(.key)=\(.value)"' >> $GITHUB_ENV
       - name: ${{ inputs.target }} service
         env:
           ARM_USE_OIDC: true
