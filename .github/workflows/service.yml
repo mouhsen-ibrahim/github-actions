@@ -128,7 +128,7 @@ jobs:
       - name: load env
         if: ${{ fromJson(inputs.service).env != '' }}
         run: |
-          echo "${{ fromJson(inputs.service).env }}" | to_entries[] | "\(.key)=\(.value)"' >> $GITHUB_ENV
+          echo "${{ toJson(fromJson(inputs.service).env) }}" | to_entries[] | "\(.key)=\(.value)"' >> $GITHUB_ENV
       - name: ${{ inputs.target }} service
         env:
           ARM_USE_OIDC: true
