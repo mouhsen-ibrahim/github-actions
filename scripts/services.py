@@ -78,6 +78,7 @@ def detect_services(paths_list = None):
             "services": list(dict.fromkeys(rest_services)),
             "infra": list(dict.fromkeys(infra_services)),
             "docker": list(dict.fromkeys(docker_services)),
+            "all" : services
         }
 
 def is_sub_path(path1 : str, path2 : str) -> bool:
@@ -108,7 +109,7 @@ def get_services_by_selector(selector, services) -> List[Service]:
         return ret
 
 def get_changed_services(changes : List[str], config) -> dict[str, List[Service]]:
-    services = detect_services()
+    services = detect_services()["all"]
     additional_services = []
     for c in config.get("additional_services", []):
         changed_files = get_triggers(c.get("trigger", {}))
