@@ -59,15 +59,26 @@ def run_git(*args: str, cwd: Optional[str] = None) -> str:
             raise RuntimeError(f"git {' '.join(args)} failed: {msg}") from e
 
 
-def detect_services():
+def detect_services(paths_list = None):
     with tracer.start_as_current_span("detect_services"):
         services = []
-        for root, dirs, files in os.walk('.'):
-            for file in files:
-                if file == "Buildfile.yaml":
-                    services.append(Service(root))
-
-        return services
+        if paths_list is None:
+            for root, dirs, files in os.walk('.'):
+                for file in files:
+                    if file == "Buildfile.yaml":
+                        services.append(Service(root))
+        else:
+            paths = paths_list.split(":")
+            for path in paths:
+                services.append(Service(path))
+        infra_services = [service for service in services if service.data.get("kind") == "terraform"]
+        docker_services = [service for service in services if service.data.get("kind") == "docker"]
+        rest_services = [service for service in services if service.data.get("kind") != "terraform" and service.data.get("kind") != "docker"]
+        return {
+            "services": list(dict.fromkeys(rest_services)),
+            "infra": list(dict.fromkeys(infra_services)),
+            "docker": list(dict.fromkeys(docker_services)),
+        }
 
 def is_sub_path(path1 : str, path2 : str) -> bool:
     if path1.startswith("./"):
@@ -191,6 +202,7 @@ def main():
     with tracer.start_as_current_span("main") as span:
         parser = argparse.ArgumentParser(description='Detect services in the repository')
         parser.add_argument('--all', action='store_true', help='Find all services')
+        parser.add_argument('--services', type=str, help='Find services based on their paths')
         parser.add_argument('--envs', action='store_true', help='Get all envs')
         parser.add_argument("--cmp", type=str, help="Compare with a git commit")
         parser.add_argument("--config", type=str, help="Configuration file", default="services.yaml")
@@ -201,6 +213,9 @@ def main():
         parser.add_argument("--workflow", type=str, help="Github workflow name")
         args = parser.parse_args()
 
+        if args.services:
+            span.set_attribute("services", args.services)
+            print(detect_services(args.services))
         if args.all:
             span.set_attribute("all", True)
             print(detect_services())
