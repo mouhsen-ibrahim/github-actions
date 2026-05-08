@@ -11,6 +11,8 @@ import (
 	"time"
 )
 
+// deployment counter: 0
+
 func main() {
 	mux := http.NewServeMux()
 
